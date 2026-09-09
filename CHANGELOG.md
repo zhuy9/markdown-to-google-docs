@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-09-09
 
 - Implemented styled DOCX rendering, local Mermaid PNGs, image resolution, and validation reports.
 - Added CLI, UTF-16 Google request plans, and optional OAuth DOCX import/read-back.
 - Added a shared agent skill, portable ZIPs, and Claude marketplace manifests.
-- Added CI and version-tag draft releases; live Google and hosted CI checks remain pending.
+- Added CI and version-tag draft releases; hosted CI and live Google Docs import verified.
 - Selected the MIT license.
 
 - Added the CommonMark and pipe-table parser with typed document IR and offline tests.

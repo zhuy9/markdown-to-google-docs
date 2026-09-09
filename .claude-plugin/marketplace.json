@@ -1,5 +1,5 @@
 {
   "name": "markdown-to-google-docs",
-  "owner": {"name": "markdown-to-google-docs contributors"},
+  "owner": {"name": "Darren Zhu"},
   "plugins": [{"name": "markdown-to-google-docs", "source": "./"}]
 }
