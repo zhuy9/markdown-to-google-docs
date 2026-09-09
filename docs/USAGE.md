@@ -64,6 +64,12 @@ content and formatting checks, warnings, and verification scope. Exit codes:
 `0` checks passed within that scope, `1` validation/upload failed, `2` conversion
 could not complete. Partial artifacts may remain after failure.
 
+Validation matches whole text blocks in source order, including code boundaries,
+heading levels, quote/list indentation, list starts/nesting, and explicit inline
+styles. Google validation also checks table dimensions and resolves inherited
+named text styles. Its code count reports matched, formatted source blocks.
+These checks do not establish exact pagination, image placement, or pixel fidelity.
+
 ## Google Docs
 
 The shared skill first checks the connected MCP's actual capabilities. Text-only

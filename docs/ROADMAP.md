@@ -5,8 +5,10 @@
 1. Parser loss prevention: complete. Overflow tables fall back to literal text;
    footnotes remain literal; extension warnings exclude code/escapes. 59 offline
    tests passed, including three new regressions.
-2. Validation fidelity: next.
-3. Strict and dry-run CLI: pending.
+2. Validation fidelity: complete. Whole-block matching, inline styles, heading
+   levels, indentation, list starts/nesting, table shape, and code boundaries
+   pass 63 offline tests and a fresh synthetic Google import/read-back.
+3. Strict and dry-run CLI: next.
 4. Mermaid sizing diagnostic: pending.
 5. Documentation and visual verification: pending.
 6. Safe document updates and folder targeting: pending.

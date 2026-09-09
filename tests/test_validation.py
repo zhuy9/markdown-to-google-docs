@@ -10,6 +10,59 @@ from md2gdoc.validator import validate_docx, validate_google
 
 
 class ValidationTests(unittest.TestCase):
+    def test_google_cannot_hide_missing_paragraph_in_another_word(self):
+        remote = {"body": {"content": [{"paragraph": {"elements": [
+            {"textRun": {"content": "concatenate\n"}}]}}]}}
+        self.assertFalse(validate_google(parse_markdown("cat\n\nconcatenate"), remote)["ok"])
+
+    def test_google_detects_quote_bold_heading_and_code_block_loss(self):
+        def remote(text, style=None, paragraph_style=None):
+            return {"body": {"content": [{"paragraph": {
+                "elements": [{"textRun": {"content": text, "textStyle": style or {}}}],
+                "paragraphStyle": paragraph_style or {},
+            }}]}}
+        self.assertFalse(validate_google(parse_markdown("> **Important**"), remote("Important\n"))["ok"])
+        self.assertFalse(validate_google(parse_markdown("## Title"), remote(
+            "Title\n", paragraph_style={"namedStyleType": "HEADING_1"}))["ok"])
+        mono = {"weightedFontFamily": {"fontFamily": "Courier New"},
+                "backgroundColor": {"color": {"rgbColor": {"red": 0.95}}}}
+        self.assertFalse(validate_google(parse_markdown("```\na\n```\n\n```\nb\n```"),
+                                         remote("a\nb\n", mono))["ok"])
+
+    def test_docx_detects_lost_bold_quote_and_reordered_paragraphs(self):
+        source = parse_markdown("> **Important**\n\nFirst\n\nSecond")
+        output = self.directory / "styles.docx"
+        render_docx(source, output, base_dir=self.directory)
+        document = Document(output)
+        document.paragraphs[0].runs[0].bold = False
+        document.paragraphs[0].paragraph_format.left_indent = 0
+        document.paragraphs[1]._p.addprevious(document.paragraphs[2]._p)
+        document.save(output)
+        report = validate_docx(source, output)
+        self.assertFalse(report["ok"])
+
+    def test_google_checks_list_start_nesting_and_table_shape(self):
+        source = parse_markdown("3. Item")
+        paragraph = {"elements": [{"textRun": {"content": "Item\n"}}],
+                     "paragraphStyle": {"indentStart": {"magnitude": 18}},
+                     "bullet": {"listId": "list"}}
+        level = {"glyphType": "DECIMAL", "startNumber": 3}
+        remote = {"body": {"content": [{"paragraph": paragraph}]},
+                  "lists": {"list": {"listProperties": {"nestingLevels": [level]}}}}
+        self.assertTrue(validate_google(source, remote)["ok"])
+        level["startNumber"] = 1
+        self.assertFalse(validate_google(source, remote)["ok"])
+        level["startNumber"] = 3
+        paragraph["bullet"]["nestingLevel"] = 1
+        self.assertFalse(validate_google(source, remote)["ok"])
+        table_source = parse_markdown("| A | B |\n| --- | --- |")
+        cells = [{"content": [{"paragraph": {"elements": [{"textRun": {"content": text + "\n"}}]}}]}
+                 for text in ("A", "B")]
+        remote = {"body": {"content": [{"table": {"tableRows": [{"tableCells": cells}]}}]}}
+        self.assertTrue(validate_google(table_source, remote)["ok"])
+        remote["body"]["content"][0]["table"]["tableRows"] = [{"tableCells": [cell]} for cell in cells]
+        self.assertFalse(validate_google(table_source, remote)["checks"]["table_shape"])
+
     def setUp(self):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
