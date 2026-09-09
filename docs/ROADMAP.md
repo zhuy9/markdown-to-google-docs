@@ -18,7 +18,7 @@ checks pass; partial implementation is not completion.
 | 11 | Validation | Expected/observed element counts expose missing content; blockquotes and rules verified; unsupported HTML reported; code not mistaken for leaked Markdown | Complete (local checks) |
 | 12 | Agent Skill packaging | One vendor-neutral skill invokes the engine, reports degradation, and validates/builds into an installable ZIP | Complete (local checks) |
 | 13 | Claude marketplace packaging | Marketplace installs the same canonical skill; no duplicated runtime instructions | Complete (local checks) |
-| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | CI passed; tag release pending |
+| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Complete (tag v0.1.0 built a verified draft) |
 
 Milestone 2 establishes the AST mapping for all MVP node types; milestones 3-9
 add output behavior incrementally. Blockquotes and horizontal rules belong in
@@ -76,6 +76,17 @@ License: MIT, selected by the owner.
 - Raw read-back and reports remain in ignored `.temp/google-verification/`;
   document IDs and temporary image URLs are excluded from tracked evidence.
 
-Milestone 14's tag release execution is the next unfinished acceptance check.
-Structural read-back does not establish visual layout fidelity. Durable
-decisions live in this roadmap and the architecture.
+All milestone acceptance checks now pass. Structural read-back does not
+establish visual layout fidelity, which remains the main unverified property.
+Durable decisions live in this roadmap and the architecture.
+
+## Tag release verification (2026-09-09)
+
+- Tag `v0.1.0` on commit `fbeaa1f` ran the release workflow to success. The
+  reused checks workflow passed, the release job's version assertion matched the
+  tag to the packaged `0.1.0`, and the draft received all four expected
+  artifacts: wheel, source distribution, skill ZIP, and Claude plugin ZIP.
+- Downloaded draft assets confirmed the embedded license and marketplace owner
+  both read `Darren Zhu`, so owner metadata propagates into published archives.
+- The release stays a draft pending manual publish, so public release and
+  install-from-release-asset paths are still unexercised.
