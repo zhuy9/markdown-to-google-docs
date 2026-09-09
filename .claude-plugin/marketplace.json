@@ -1,0 +1,5 @@
+{
+  "name": "markdown-to-google-docs",
+  "owner": {"name": "markdown-to-google-docs contributors"},
+  "plugins": [{"name": "markdown-to-google-docs", "source": "./"}]
+}

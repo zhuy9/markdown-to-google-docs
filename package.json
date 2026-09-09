@@ -1,0 +1,10 @@
+{
+  "name": "markdown-to-google-docs-tools",
+  "private": true,
+  "scripts": {
+    "test:mermaid": "python -m unittest discover -s tests/integration -v"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "11.17.0"
+  }
+}

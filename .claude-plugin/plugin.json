@@ -1,0 +1,6 @@
+{
+  "name": "markdown-to-google-docs",
+  "version": "0.1.0",
+  "description": "Convert Markdown to styled Google Docs or DOCX with selectable code and Mermaid.",
+  "license": "MIT"
+}

@@ -1,0 +1,41 @@
+# Local working notes and generated documents
+.temp/
+temp/
+output/
+*.docx
+*.assets/
+*.report.json
+*.requests.json
+node_modules/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+.keys/
+credentials*.json
+client_secret*.json
+token*.json
+service-account*.json
+service_account*.json
+*.pem
+*.key
+
+# Python environments, build output, and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

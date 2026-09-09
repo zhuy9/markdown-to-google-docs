@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "markdown-to-google-docs"
+version = "0.1.0"
+description = "Convert Markdown to styled Google Docs and DOCX with Mermaid diagrams."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["markdown-it-py>=4.2,<5", "python-docx>=1.2,<2"]
+
+[project.scripts]
+md2gdoc = "md2gdoc.cli:main"
+
+[project.optional-dependencies]
+dev = ["build>=1.2", "PyYAML>=6,<7"]
+google = ["google-api-python-client>=2,<3", "google-auth-oauthlib>=1,<2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
