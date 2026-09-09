@@ -18,7 +18,7 @@ checks pass; partial implementation is not completion.
 | 11 | Validation | Expected/observed element counts expose missing content; blockquotes and rules verified; unsupported HTML reported; code not mistaken for leaked Markdown | Complete (local checks) |
 | 12 | Agent Skill packaging | One vendor-neutral skill invokes the engine, reports degradation, and validates/builds into an installable ZIP | Complete (local checks) |
 | 13 | Claude marketplace packaging | Marketplace installs the same canonical skill; no duplicated runtime instructions | Complete (local checks) |
-| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Implemented; hosted run pending |
+| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | CI passed; tag release pending |
 
 Milestone 2 establishes the AST mapping for all MVP node types; milestones 3-9
 add output behavior incrementally. Blockquotes and horizontal rules belong in
@@ -44,8 +44,10 @@ License: MIT, selected by the owner.
 - Both ZIPs execute outside the checkout and contain identical canonical skills.
   The skill validator passed. Claude's CLI validated the marketplace, installed
   it in an isolated profile, and the installed converter passed a fixture check.
-- Workflows passed actionlint. Actual GitHub-hosted matrix and tag release
-  execution have not run, so milestone 14 remains open.
+- Workflows passed actionlint. [Hosted CI](https://github.com/zhuy9/markdown-to-google-docs/actions/runs/34367365699)
+  passed all four Windows/Linux Python jobs and the real Mermaid job for
+  commit `b592b9a`. Tag release execution remains unverified, so milestone 14
+  stays open.
 - No callable Google Docs/Drive creation tools were exposed in this session.
   No live Google document was created, imported, or read back. Milestone 10 is
   the next unfinished acceptance check; use a synthetic fixture when connected.

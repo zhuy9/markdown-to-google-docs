@@ -109,7 +109,8 @@ Tests use synthetic documents; live Google checks are separate. CI tests Windows
 and Linux, builds wheels/source distributions and both skill ZIPs, and exercises
 the real Mermaid CLI on Windows. Pushing a version-matching `v*` tag creates a
 draft GitHub release after checks pass; publishing the draft is an owner action.
-Hosted workflows have not yet run for this repository.
+Hosted CI passed on Windows and Linux, including real Mermaid rendering.
+The version-tag release workflow still needs verification.
 
 Read [architecture](ARCHITECTURE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and
 [AGENTS.md](../AGENTS.md). `CLAUDE.md` is a relative symlink to `AGENTS.md`.

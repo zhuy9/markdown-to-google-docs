@@ -47,6 +47,6 @@ See [setup and usage](docs/USAGE.md) for Google upload and skill installation.
 ## Contributing
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), and
-[roadmap](docs/ROADMAP.md). Local tests pass; hosted CI is not yet verified.
+[roadmap](docs/ROADMAP.md). Local tests and hosted CI pass.
 
 [MIT license](LICENSE).
