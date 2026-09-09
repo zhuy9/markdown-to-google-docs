@@ -58,6 +58,8 @@ Pictures are scaled to fit the printable page box, preserving aspect ratio. A
 Mermaid diagram too tall for one page still fits, but prints smaller than the
 text width and reports a `mermaid_scaled_to_page` warning with its source lines;
 splitting the graph or laying it out left-to-right reads better than shrinking.
+The warning appears only when the page's height actually forces scaling; small
+diagrams and diagrams scaled only to fit the width do not trigger it.
 
 Each conversion writes a sibling `.report.json`: expected/observed counts,
 content and formatting checks, warnings, and verification scope. Exit codes:

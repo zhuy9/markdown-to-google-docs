@@ -11,8 +11,9 @@
 3. Strict and dry-run CLI: complete. 66 offline tests passed; side-effect guards
    verify dry run never renders/downloads/authenticates/writes and strict warnings
    block upload while default warning behavior remains compatible.
-4. Mermaid sizing diagnostic: next.
-5. Documentation and visual verification: pending.
+4. Mermaid sizing diagnostic: complete. 67 offline tests passed; tall diagrams
+   warn, while naturally small and width-limited diagrams do not.
+5. Documentation and visual verification: next.
 6. Safe document updates and folder targeting: pending.
 
 Follow the original order. Only mark a milestone complete after its acceptance

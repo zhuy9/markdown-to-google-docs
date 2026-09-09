@@ -167,18 +167,19 @@ class _Writer:
 
     def picture(self, paragraph, path, alt, title, width):
         shape = paragraph.add_run().add_picture(str(path))
+        height_limited = self.height / shape.height < min(1, width / shape.width)
         fit = min(1, width / shape.width, self.height / shape.height)
         if fit < 1:
             shape.width, shape.height = round(shape.width * fit), round(shape.height * fit)
         shape._inline.docPr.set("descr", alt)
         if title:
             shape._inline.docPr.set("title", title)
-        return shape
+        return shape, height_limited
 
     def image(self, paragraph, image, source, width):
         try:
             path = resolve_image(image.src, self.base_dir, self.assets, self.allow_remote_images)
-            shape = self.picture(paragraph, path, image.alt, image.title, width)
+            shape, _ = self.picture(paragraph, path, image.alt, image.title, width)
             if image.link:
                 link = OxmlElement("a:hlinkClick")
                 link.set(qn("r:id"), paragraph.part.relate_to(image.link, RT.HYPERLINK, is_external=True))
@@ -196,9 +197,9 @@ class _Writer:
             rendered = self.mermaid_renderer(block.text, path)
             paragraph = self.doc.add_paragraph()
             available = self.width - Inches(depth / 4)
-            shape = self.picture(paragraph, rendered, "Mermaid diagram", None, available)
+            shape, height_limited = self.picture(paragraph, rendered, "Mermaid diagram", None, available)
             shape._inline.docPr.set("name", name)
-            if shape.width < available:
+            if height_limited:
                 self.warnings.append(ir.Warning(
                     "mermaid_scaled_to_page",
                     f"Diagram is too tall for one page and was scaled to {shape.width / available:.0%} "

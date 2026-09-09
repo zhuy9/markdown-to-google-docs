@@ -105,6 +105,15 @@ class RendererTests(unittest.TestCase):
         self.assertEqual(round(shape.width / shape.height, 2), round(400 / 6000, 2))
         self.assertEqual([warning.code for warning in warnings], ["mermaid_scaled_to_page"])
 
+    def test_small_and_wide_diagrams_do_not_get_height_warnings(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for width, height in ((100, 100), (6000, 400)):
+                warnings = render_docx(parse_markdown("```mermaid\ngraph LR\n A --> B\n```"),
+                    root / f"diagram-{width}.docx", base_dir=root,
+                    mermaid_renderer=lambda source, path: write_png(path, width, height))
+                self.assertEqual(warnings, ())
+
     def test_missing_image_remains_visible_with_warning(self):
         document, warnings = self.render("![A chart](missing.png)")
         self.assertIn("A chart", document.paragraphs[0].text)
