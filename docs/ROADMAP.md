@@ -17,7 +17,24 @@
    real Google-exported demo image, OAuth setup/scopes/revocation, limitations, and
    reconciled release evidence. Fresh import/read-back passes; both PDF pages were
    inspected (headings, lists, code, table, images, diagram, rule, literal HTML).
-6. Safe document updates and folder targeting: next.
+6. Safe document updates and folder targeting: implemented for single-tab text/code
+   documents. Source-bound atomic state, pending-operation recovery, local locking,
+   remote fingerprint checks, revision-guarded batches, explicit new/update flags,
+   and folder preflight have offline coverage. A synthetic live update preserved
+   headings, emoji, links, bold, hard breaks, and two code blocks; a stale-revision
+   batch was rejected by Google. Live testing exposed and fixed native paragraph
+   styles resetting inline styles. Full-content updates remain a future milestone;
+   standalone OAuth and folder targeting have not been exercised live.
+
+Next unfinished feature milestone: revision-protected updates for tables, lists,
+images, and Mermaid, which require expanding the native adapter. Do not substitute
+an unguarded full DOCX overwrite. Batch conversion and presets remain deferred.
+
+Final review checks: 81 offline tests and 3 real Mermaid tests passed on macOS /
+Python 3.14. Wheel/source and both skill archives build; archive contents are
+inspected and the installed wheel is exercised outside the checkout. Live Google
+verification used connected MCP tools, not standalone OAuth. New hosted CI and
+standalone OAuth/folder checks remain outstanding. No new runtime dependency was added.
 
 Follow the original order. Only mark a milestone complete after its acceptance
 checks pass; partial implementation is not completion.

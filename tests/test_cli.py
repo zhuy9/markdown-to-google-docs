@@ -41,6 +41,22 @@ class CLITests(unittest.TestCase):
             self.assertEqual(main([str(self.input), '--dry-run', '--allow-remote-images']), 0)
         self.assertEqual(json.loads(stdout.getvalue())['dependencies']['remote_images'], 1)
 
+    def test_update_rejects_complex_source_before_authentication(self):
+        self.input.write_text('- List')
+        with patch('md2gdoc.cli.google_clients', side_effect=AssertionError('auth')):
+            self.assertEqual(main([str(self.input), '--upload', '--update', 'target-id']), 2)
+        self.assertFalse(self.output.exists())
+
+    def test_publication_and_credentials_cannot_be_overwritten_by_output(self):
+        self.input.write_text('Keep')
+        for name in ('source.md.gdoc.json', 'token.json'):
+            target = self.directory / name
+            target.write_text('Do not overwrite')
+            self.output = target
+            result = self.run_cli('--token', str(self.directory / 'token.json'))
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(target.read_text(), 'Do not overwrite')
+
     def setUp(self):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

@@ -19,7 +19,8 @@ Markdown -> parser AST -> Document IR -> Google Docs operations -> MCP/API
 `parser.py` normalizes the AST without file or network access. `models.py`
 holds frozen dataclasses. `renderer.py` maps the IR to DOCX formatting;
 `google_docs.py` owns API request construction, indexes, and execution.
-`images.py` resolves assets; the renderer accepts a Mermaid callable, defaulting
+`publishing.py` owns source-bound identity, local publication locks, fingerprints,
+and pending/verified state. `images.py` resolves assets; the renderer accepts a Mermaid callable, defaulting
 to the local official CLI in `mermaid.py`. `validator.py` independently compares
 expected and observed output.
 
@@ -117,9 +118,11 @@ contract: `[![alt](image.png)](destination)` would otherwise lose its hyperlink.
   file for manual import. Check `about.importFormats` when using the API.
   Import may change layout; verify the imported result before claiming
   fidelity. See [Drive import](https://developers.google.com/workspace/drive/api/guides/manage-uploads#import_to_google_docs_types).
-- **Retries and ownership.** Start with creation of new documents. Record
-  returned IDs; do not blindly retry an ambiguous create or overwrite an
-  existing document. Updates can follow once revision checks are implemented.
+- **Retries and ownership.** New-document creation remains the default. Explicit
+  single-tab text/code updates check saved fingerprints and use one atomic Docs
+  batch with `requiredRevisionId`. State is marked pending before mutation and
+  verified only after read-back. No automatic retry or unconditional overwrite;
+  complex content continues to use new DOCX imports. See usage for recovery.
 - **Mermaid and untrusted input.** The selected provider must validate/render
   syntax and return PNG. Preserve source locally for regeneration; failures
   retain readable source with a warning. Do not execute fenced code or raw

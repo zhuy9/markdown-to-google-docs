@@ -47,6 +47,15 @@ Read back the created document. Save the response locally and compare it using
 `md2gdoc.validator.validate_google(parse_markdown(source), response)`.
 Do not claim successful Google conversion from local DOCX checks alone.
 
+For explicit repeat publishing, the standalone CLI supports `--upload --update
+[DOCUMENT_ID]`, reusing the source's `.gdoc.json` identity when the ID is omitted.
+Only single-tab text/code documents can be updated; complex documents require
+new imports. Updates replace body text and can affect anchored comments. Preserve
+title/folder, stop on conflicts, and never fall back to an unguarded Drive overwrite.
+`--expected-revision` is only for a revision the user has reviewed and authorized
+replacing. `--upload --new` deliberately creates another Doc. `--folder-id` targets
+a writable folder for new uploads. See the delivery reference for recovery.
+
 ## Report the result
 
 The converter writes a sibling `.report.json` with scope, expected/observed

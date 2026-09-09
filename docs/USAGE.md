@@ -158,6 +158,56 @@ Alternatively, upload the DOCX to Drive and open it with Google Docs. Check the
 imported result: local validation does not establish Google import fidelity.
 See [Google delivery details](../skills/markdown-to-google-docs/references/google-delivery.md).
 
+### Update an existing document
+
+```bash
+# Default: create a new document, and record its identity beside the source.
+md2gdoc notes.md --upload
+# Replace that saved document after checking for remote edits.
+md2gdoc notes.md --upload --update
+# Explicitly select an existing document on the first update.
+md2gdoc notes.md --upload --update DOCUMENT_ID
+# Explicitly create another document, even after an ambiguous earlier run.
+md2gdoc notes.md --upload --new
+# Create a document in a specific writable folder.
+md2gdoc notes.md --upload --folder-id FOLDER_ID
+```
+
+The initial update implementation supports paragraphs, headings, inline styles,
+links, hard breaks, and code in a single text-only document tab. Tables, lists,
+images, Mermaid, headers/footers, footnotes, suggestions, and multi-tab targets
+are rejected before replacement. New-document DOCX import still supports the full
+compatibility matrix. Updates replace body content, preserve the title/folder,
+and do not preserve comments attached to replaced text or merge collaborators' edits.
+
+The source's sibling `notes.md.gdoc.json` records its resolved path, document ID,
+revision, content fingerprint, and verification status. The default still creates
+a new Doc; only `--update` reuses the identity. No document is selected by title.
+Keep this local record: it detects changes made since the last verified publication.
+Changing/moving a source requires reviewing its association; copied state with a
+different source path is rejected. These files are ignored by Git.
+
+Updates use the freshly read revision with Google's atomic
+[`requiredRevisionId` precondition](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/batchUpdate#writecontrol).
+They also compare the saved fingerprint, since persisted revision IDs are not a
+durable content identity. If Google content changed, review the current document
+and deliberately retry with `--update DOCUMENT_ID --expected-revision REVISION_ID`.
+The error provides the current revision; a further edit makes that retry fail.
+There is no unconditional force-overwrite flag.
+
+A `pending` record means the operation was not verified, possibly after an
+ambiguous network failure. Inspect the recorded ID and Google revision history;
+do not blindly retry. After review, supply the current expected revision for an
+update or use `--new` for a deliberate new document. A per-source `.gdoc.lock`
+prevents simultaneous local publications. If a process crashes, confirm it has
+stopped and inspect the pending state before removing its stale lock.
+
+Folder targeting is for creation only. It checks folder identity, type, and
+permission to add children before creating anything. It works with either DOCX
+import or native creation and does not move an existing document during update.
+Google access still depends on the signed-in account and the `drive.file` grant.
+Dry run does not verify remote IDs, revisions, or folder permissions.
+
 ## Agent installation
 
 Build with `python -m pip install -e ".[dev]"` then `python tools/build_skill.py`.

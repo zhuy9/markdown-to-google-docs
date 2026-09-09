@@ -6,6 +6,9 @@ output/
 *.assets/
 *.report.json
 *.requests.json
+*.gdoc.json
+*.gdoc.lock
+*.gdoc.json.*.tmp
 node_modules/
 
 # Credentials and local configuration

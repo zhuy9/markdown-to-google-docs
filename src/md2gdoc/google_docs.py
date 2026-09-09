@@ -27,7 +27,7 @@ def build_requests(document: ir.Document) -> list[dict]:
         for inline in inlines:
             if isinstance(inline, ir.Image):
                 raise ValueError("Use DOCX import to embed images without public hosting.")
-            text = ("\n" if inline.hard else " ") if isinstance(inline, ir.LineBreak) else inline.text
+            text = ("\u000b" if inline.hard else " ") if isinstance(inline, ir.LineBreak) else inline.text
             end = position + utf16_length(text)
             style = {} if isinstance(inline, ir.LineBreak) else _text_style(inline)
             if style and end > position:
@@ -46,6 +46,8 @@ def build_requests(document: ir.Document) -> list[dict]:
         }})
     if not text_parts:
         return []
+    # Applying a named paragraph style can reset inline formatting in Google Docs.
+    requests.sort(key=lambda request: "updateTextStyle" in request)
     return [{"insertText": {"location": {"index": 1}, "text": "".join(text_parts)}}] + requests
 
 
@@ -70,11 +72,16 @@ def _read_created(service, identifier: str) -> dict:
         raise RuntimeError(f"Created Google Doc {identifier}, but read-back failed; do not blindly retry creation: {error}") from error
 
 
-def create_document(service, document: ir.Document, title: str) -> dict:
+def create_document(service, document: ir.Document, title: str, *, drive=None, folder_id=None, on_created=None) -> dict:
     requests = build_requests(document)
-    created = service.documents().create(body={"title": title}).execute()
-    identifier = created["documentId"]
+    if folder_id:
+        identifier = drive.files().create(body={"name": title, "mimeType": GOOGLE_DOC_MIME,
+                                               "parents": [folder_id]}, fields="id", supportsAllDrives=True).execute()["id"]
+    else:
+        identifier = service.documents().create(body={"title": title}).execute()["documentId"]
     try:
+        if on_created:
+            on_created(identifier)
         if requests:
             service.documents().batchUpdate(documentId=identifier, body={"requests": requests}).execute()
     except Exception as error:
@@ -82,18 +89,90 @@ def create_document(service, document: ir.Document, title: str) -> dict:
     return _read_created(service, identifier)
 
 
-def import_docx(drive, docs, path: Path, title: str) -> dict:
+def import_docx(drive, docs, path: Path, title: str, *, folder_id=None, on_created=None) -> dict:
     from googleapiclient.http import MediaFileUpload
 
     formats = drive.about().get(fields="importFormats").execute().get("importFormats", {})
     if GOOGLE_DOC_MIME not in formats.get(DOCX_MIME, []):
         raise ValueError("This Drive connection does not advertise DOCX-to-Google-Docs import.")
+    body = {"name": title, "mimeType": GOOGLE_DOC_MIME}
+    if folder_id:
+        body["parents"] = [folder_id]
     uploaded = drive.files().create(
-        body={"name": title, "mimeType": GOOGLE_DOC_MIME},
+        body=body,
         media_body=MediaFileUpload(str(path), mimetype=DOCX_MIME),
         fields="id",
+        **({"supportsAllDrives": True} if folder_id else {}),
     ).execute()
+    if on_created:
+        try:
+            on_created(uploaded["id"])
+        except OSError as error:
+            raise RuntimeError(f"Created Google Doc {uploaded['id']}, but recording its ID failed: {error}") from error
     return _read_created(docs, uploaded["id"])
+
+
+def _has_suggestions(value):
+    if isinstance(value, dict):
+        return any((key.startswith("suggested") and item) or _has_suggestions(item) for key, item in value.items())
+    return isinstance(value, list) and any(_has_suggestions(item) for item in value)
+
+
+def build_update_body(document: ir.Document, current: dict, expected_revision: str | None = None) -> dict:
+    """Replace a single text-only body atomically; never use unguarded DOCX overwrite."""
+    requests = build_requests(document)
+    revision = current.get("revisionId")
+    if not revision or (expected_revision is not None and revision != expected_revision):
+        raise ValueError("Missing or changed Google revision; read and review the document again.")
+    tabs = current.get("tabs") or []
+    if len(tabs) > 1 or any(tab.get("childTabs") for tab in tabs):
+        raise ValueError("Updates require a single-tab document.")
+    context = tabs[0].get("documentTab", tabs[0]) if tabs else current
+    tab_id = (tabs[0].get("tabProperties", {}).get("tabId") or tabs[0].get("tabId")) if tabs else None
+    if tabs and not tab_id:
+        raise ValueError("Missing target tab ID.")
+    content = (context.get("body") or {}).get("content", [])
+    if not content or not isinstance(content[-1].get("endIndex"), int):
+        raise ValueError("Missing document body indexes; refusing replacement.")
+    if _has_suggestions(current) or any(context.get(key) for key in
+            ("headers", "footers", "footnotes", "inlineObjects", "positionedObjects")):
+        raise ValueError("Updates cannot replace documents containing assets, headers, footnotes, or suggestions.")
+    for element in content:
+        if "sectionBreak" in element and element.get("endIndex") == 1:
+            continue
+        paragraph = element.get("paragraph")
+        if paragraph is None or "bullet" in paragraph or any("textRun" not in e for e in paragraph.get("elements", [])):
+            raise ValueError("Updates support existing text/code documents only; create a new Doc for structural content.")
+    end = content[-1]["endIndex"] - 1
+    if end < 1:
+        raise ValueError("Invalid document body end index.")
+    prefix = [{"deleteContentRange": {"range": {"startIndex": 1, "endIndex": end}}}] if end > 1 else []
+    # Reset the surviving final paragraph before insertion so old styles cannot leak.
+    prefix.extend([
+        {"updateTextStyle": {"range": {"startIndex": 1, "endIndex": 2}, "textStyle": {}, "fields": "*"}},
+        {"updateParagraphStyle": {"range": {"startIndex": 1, "endIndex": 2},
+                                  "paragraphStyle": {"namedStyleType": "NORMAL_TEXT"}, "fields": "*"}},
+    ])
+    requests = prefix + requests
+    if tab_id:
+        for request in requests:
+            operation = next(iter(request.values()))
+            operation.get("range", operation.get("location"))["tabId"] = tab_id
+    return {"requests": requests, "writeControl": {"requiredRevisionId": revision}}
+
+
+def update_document(service, identifier: str, body: dict) -> dict:
+    if not body.get("writeControl", {}).get("requiredRevisionId"):
+        raise ValueError("Updates require a requiredRevisionId guard.")
+    try:
+        result = service.documents().batchUpdate(documentId=identifier, body=body).execute()
+        remote = service.documents().get(documentId=identifier, includeTabsContent=True).execute()
+        revision = result.get("writeControl", {}).get("requiredRevisionId")
+        if not revision or remote.get("revisionId") != revision:
+            raise ValueError("Document changed before read-back, or the write revision is missing.")
+        return remote
+    except Exception as error:
+        raise RuntimeError(f"Update of Google Doc {identifier} was not verified; inspect it before retrying: {error}") from error
 
 
 def google_clients(credentials_path: Path | None, token_path: Path):

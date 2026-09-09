@@ -94,6 +94,18 @@ own sign-in. For standalone upload, install `.[google]`, configure your own desk
 OAuth client, and use `--upload --credentials /path/to/client.json`.
 See [setup, scopes, token storage, and revocation](docs/USAGE.md#google-authentication).
 
+## Repeat publishing
+
+```bash
+md2gdoc notes.md --upload --folder-id FOLDER_ID
+md2gdoc notes.md --upload --update
+```
+
+Uploads save document identity locally; updates check for remote edits and use
+an atomic revision guard. This first update path supports single-tab text/code
+documents. Complex documents still use new DOCX imports. Use `--new` to explicitly
+create another Doc. See [update scope and conflict recovery](docs/USAGE.md#update-an-existing-document).
+
 ## Install as an agent skill
 
 One canonical skill runs in both agents. Each needs the Python engine's two

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Preserve overflow tables and footnote-like definitions; warn on unsupported syntax.
+- Validate ordered blocks, inline formatting, heading/list structure, and code boundaries.
+- Add offline `--dry-run` and warning-sensitive `--strict` modes.
+- Correct false height warnings for small Mermaid diagrams.
+- Add a real Google-exported demo, compatibility matrix, and OAuth/recovery docs.
+- Add explicit revision-protected text/code updates, persisted identity, and creation folder targeting.
+- Apply native paragraph styles before inline styles and preserve hard line breaks.
+
 ## 0.1.1 - 2026-09-09
 
 - Fit pictures to the printable page box; tall Mermaid diagrams no longer run

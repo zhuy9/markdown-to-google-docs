@@ -27,7 +27,24 @@ instead of `md2gdoc`. Initial sign-in opens a browser. The token defaults to
 `--credentials`. Keep client files and tokens outside the repository. Never
 embed shared keys in a public skill or ask users to paste secrets into chat.
 
-Read-back checks cover text, structural counts, links, and code formatting.
+Read-back checks cover ordered text blocks, structure, links, and inline/code formatting.
 Google import can change layout; these checks do not establish pixel-perfect
 appearance. Report the Google URL and any failed checks. No automatic retries
-or edits to existing documents are performed.
+are performed.
+
+Explicit CLI updates use `--upload --update [DOCUMENT_ID]`. A local source-bound
+`.gdoc.json` record stores the ID, revision, fingerprint, and verified/pending
+status. Updates accept only one text/code tab and compare the saved fingerprint
+before sending a single batch with `writeControl.requiredRevisionId`. Full DOCX
+replacement lacks this Docs write-control safeguard and is not an update fallback.
+For MCP execution, use `build_update_body(source_ir, readback)` and send both its
+requests and writeControl unchanged to the exact document ID that was read.
+Do not use the new-document request plan to overwrite an existing document.
+
+On a detected edit or pending/ambiguous operation, inspect the document and
+revision history. Use `--expected-revision` only after authorization to replace
+that reviewed revision; stale revisions fail. `--new` explicitly creates another
+Doc. A leftover `.gdoc.lock` requires checking the process stopped and reviewing
+pending state before removal. Updates preserve title/folder and replace body text;
+comments anchored to replaced text are not preserved. New uploads support
+`--folder-id`, with writable-folder preflight.
