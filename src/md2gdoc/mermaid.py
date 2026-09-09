@@ -9,6 +9,24 @@ def render_mermaid(source: str, output: Path, scale: int = 3) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     input_path = output.with_suffix(".mmd")
     input_path.write_text(source, encoding="utf-8")
+    command = mermaid_command()
+    try:
+        # ponytail: scale is the only resolution knob; the renderer caps display width,
+        # so a higher scale raises effective DPI. Raise it if diagrams look soft in print.
+        subprocess.run(command + ["-i", str(input_path), "-o", str(output), "-b", "white",
+                                  "-s", str(scale)],
+                       check=True, capture_output=True, text=True, timeout=60)
+    except subprocess.CalledProcessError as error:
+        raise RuntimeError("Mermaid render failed: " + error.stderr.strip()[:600]) from error
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError("Mermaid rendering exceeded 60 seconds.") from error
+    if not output.is_file():
+        raise RuntimeError("Mermaid CLI did not produce a PNG.")
+    return output
+
+
+def mermaid_command() -> list[str]:
+    """Locate the renderer without launching a process or creating files."""
     executable = shutil.which("mmdc")
     candidates = [
         Path.cwd() / "node_modules/@mermaid-js/mermaid-cli/src/cli.js",
@@ -23,16 +41,4 @@ def render_mermaid(source: str, output: Path, scale: int = 3) -> Path:
         command = [executable]
     else:
         raise RuntimeError("Install Mermaid CLI with npm install -g @mermaid-js/mermaid-cli.")
-    try:
-        # ponytail: scale is the only resolution knob; the renderer caps display width,
-        # so a higher scale raises effective DPI. Raise it if diagrams look soft in print.
-        subprocess.run(command + ["-i", str(input_path), "-o", str(output), "-b", "white",
-                                  "-s", str(scale)],
-                       check=True, capture_output=True, text=True, timeout=60)
-    except subprocess.CalledProcessError as error:
-        raise RuntimeError("Mermaid render failed: " + error.stderr.strip()[:600]) from error
-    except subprocess.TimeoutExpired as error:
-        raise RuntimeError("Mermaid rendering exceeded 60 seconds.") from error
-    if not output.is_file():
-        raise RuntimeError("Mermaid CLI did not produce a PNG.")
-    return output
+    return command

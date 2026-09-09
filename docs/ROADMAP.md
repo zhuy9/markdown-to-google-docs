@@ -8,8 +8,10 @@
 2. Validation fidelity: complete. Whole-block matching, inline styles, heading
    levels, indentation, list starts/nesting, table shape, and code boundaries
    pass 63 offline tests and a fresh synthetic Google import/read-back.
-3. Strict and dry-run CLI: next.
-4. Mermaid sizing diagnostic: pending.
+3. Strict and dry-run CLI: complete. 66 offline tests passed; side-effect guards
+   verify dry run never renders/downloads/authenticates/writes and strict warnings
+   block upload while default warning behavior remains compatible.
+4. Mermaid sizing diagnostic: next.
 5. Documentation and visual verification: pending.
 6. Safe document updates and folder targeting: pending.
 

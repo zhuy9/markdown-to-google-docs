@@ -72,6 +72,28 @@ These checks do not establish exact pagination, image placement, or pixel fideli
 
 ## Google Docs
 
+## Preflight and strict conversion
+
+```bash
+md2gdoc input.md --dry-run
+md2gdoc input.md --dry-run --strict --upload
+md2gdoc input.md --strict -o output/document.docx
+```
+
+Dry run prints JSON counts, source warnings, local asset checks, and dependency
+requirements. It never creates files, starts Mermaid, downloads images, or signs
+in to Google, even with `--upload` or `--allow-remote-images`. Mermaid syntax,
+browser launch, remote asset availability, and rendering fidelity remain unchecked.
+`--format google-requests` also checks that the source fits the native adapter.
+
+Strict mode exits 1 for any warning, including literal unsupported syntax and
+layout degradation. It prevents upload when local validation or warnings fail.
+A normal strict conversion still writes its DOCX and report for inspection;
+dry run only prints the report. Without strict mode, preserved literal content
+continues to succeed with warnings; missing assets still fail validation.
+
+## Google delivery
+
 The shared skill first checks the connected MCP's actual capabilities. Text-only
 documents can use generated native requests:
 

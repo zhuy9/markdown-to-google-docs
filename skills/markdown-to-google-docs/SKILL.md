@@ -26,6 +26,11 @@ the user reports soft or blurry diagrams; larger scales cost render time.
 Images resolve against the Markdown file's directory. HTTP(S) downloads require
 `--allow-remote-images`; use only when fetching those references is authorized.
 
+Use `--dry-run` to inspect counts, warnings, local assets, and dependencies without
+writing files, rendering diagrams, downloading images, or authenticating.
+Mermaid syntax and output fidelity remain unchecked in this mode. Use `--strict`
+when degradation must fail the conversion; any warning prevents upload and exits 1.
+
 ## Choose the delivery path
 
 - Prefer a connected Google Docs MCP when its actual tools support creation,

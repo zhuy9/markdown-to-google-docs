@@ -1,4 +1,6 @@
 import json
+import io
+from contextlib import redirect_stdout
 from pathlib import Path
 import subprocess
 import sys
@@ -10,6 +12,35 @@ from md2gdoc.cli import main
 
 
 class CLITests(unittest.TestCase):
+    def test_dry_run_analyzes_without_side_effects(self):
+        self.input.write_text('# Title\n\n```mermaid\ngraph LR\n A --> B\n```\n\n![missing](missing.png)')
+        with patch("md2gdoc.cli.render_docx", side_effect=AssertionError("render")), \
+             patch("md2gdoc.cli.google_clients", side_effect=AssertionError("auth")), \
+             patch("md2gdoc.images.urlopen", side_effect=AssertionError("download")), \
+             redirect_stdout(io.StringIO()) as stdout:
+            status = main([str(self.input), '--dry-run', '--upload', '-o', str(self.output)])
+        report = json.loads(stdout.getvalue())
+        self.assertEqual(status, 1)
+        self.assertEqual(report['scope'], 'source-analysis')
+        self.assertEqual(report['counts']['mermaid'], 1)
+        self.assertEqual(report['dependencies']['google_apis'], ['Docs', 'Drive'])
+        self.assertFalse(self.output.exists())
+        self.assertEqual(list(self.directory.iterdir()), [self.input])
+
+    def test_strict_warnings_block_upload_but_default_stays_compatible(self):
+        self.input.write_text('<details>Literal</details>')
+        with patch('md2gdoc.cli.google_clients', side_effect=AssertionError('auth')), redirect_stdout(io.StringIO()):
+            self.assertEqual(main([str(self.input), '-o', str(self.output), '--strict', '--upload']), 1)
+        self.assertTrue(self.output.exists())
+        self.assertEqual(self.run_cli().returncode, 0)
+        self.assertEqual(self.run_cli('--dry-run', '--strict').returncode, 1)
+
+    def test_dry_run_remote_images_are_not_fetched_even_with_opt_in(self):
+        self.input.write_text('![image](https://example.com/image.png)')
+        with patch('md2gdoc.images.urlopen', side_effect=AssertionError('download')), redirect_stdout(io.StringIO()) as stdout:
+            self.assertEqual(main([str(self.input), '--dry-run', '--allow-remote-images']), 0)
+        self.assertEqual(json.loads(stdout.getvalue())['dependencies']['remote_images'], 1)
+
     def setUp(self):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

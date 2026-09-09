@@ -11,7 +11,7 @@ from .google_docs import build_requests, create_document, google_clients, import
 from .mermaid import render_mermaid
 from .parser import parse_markdown
 from .renderer import render_docx
-from .validator import validate_docx, validate_google
+from .validator import analyze_document, validate_docx, validate_google
 
 
 def main(argv=None) -> int:
@@ -24,6 +24,8 @@ def main(argv=None) -> int:
     parser.add_argument("--mermaid-scale", type=int, choices=range(1, 6), default=3,
                         metavar="{1..5}", help="Mermaid pixel density; higher is sharper (default: 3).")
     parser.add_argument("--upload", action="store_true", help="Create a new Google Doc using your own OAuth account.")
+    parser.add_argument("--dry-run", action="store_true", help="Analyze without rendering, downloading, authenticating, or writing files.")
+    parser.add_argument("--strict", action="store_true", help="Fail on warnings and prevent upload when content degrades.")
     parser.add_argument("--credentials", type=Path, help="Google desktop OAuth client JSON for first sign-in.")
     parser.add_argument("--token", type=Path, default=Path.home() / ".config/md2gdoc/token.json")
     args = parser.parse_args(argv)
@@ -34,6 +36,18 @@ def main(argv=None) -> int:
         parser.error("Input, output, and report paths must be different.")
     try:
         document = parse_markdown(args.input.read_text(encoding="utf-8-sig"))
+        if args.dry_run:
+            report, warnings = analyze_document(document, args.input.resolve().parent, args.allow_remote_images)
+            report["dependencies"]["google_apis"] = ["Docs", "Drive"] if args.upload else []
+            if args.format == "google-requests":
+                try:
+                    build_requests(document)
+                except ValueError as error:
+                    report.update(ok=False, error=str(error))
+            report["warnings"] = [asdict(warning) for warning in warnings]
+            report["ok"] &= not (args.strict and bool(warnings))
+            print(json.dumps(report, indent=2))
+            return 0 if report["ok"] else 1
         output.parent.mkdir(parents=True, exist_ok=True)
         if args.format == "docx":
             warnings = render_docx(document, output, base_dir=args.input.resolve().parent,
@@ -45,6 +59,7 @@ def main(argv=None) -> int:
             warnings = document.warnings
             report = {"scope": "google-request-plan", "ok": True}
         report["warnings"] = [asdict(warning) for warning in warnings]
+        report["ok"] &= not (args.strict and bool(warnings))
         if args.upload and report["ok"]:
             report["local_validation"] = report.copy()
             try:

@@ -1,12 +1,15 @@
 """Compare source structure with saved output, independently of the renderer."""
 
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from docx import Document
 from docx.text.paragraph import Paragraph
 from docx.oxml.ns import qn
 
 from . import models as ir
+from .images import resolve_image
+from .mermaid import mermaid_command
 
 
 def _blocks(blocks):
@@ -49,6 +52,41 @@ def _expected(document):
         "link_destinations": len(links),
     }
     return counts, links, blocks
+
+
+def analyze_document(source: ir.Document, base_dir: Path, allow_remote: bool = False) -> tuple[dict, tuple[ir.Warning, ...]]:
+    """Offline preflight: no asset downloads, rendering, authentication, or writes."""
+    counts, _, blocks = _expected(source)
+    counts.update(paragraphs=sum(isinstance(b, ir.Paragraph) for b in blocks),
+                  lists=sum(isinstance(b, ir.ListBlock) for b in blocks))
+    warnings = list(source.warnings)
+    remote = 0
+    missing = False
+    for block in blocks:
+        for group in _inline_groups(block):
+            for image in (part for part in group if isinstance(part, ir.Image)):
+                if urlsplit(image.src).scheme in ("http", "https"):
+                    remote += 1
+                    if allow_remote:
+                        continue
+                try:
+                    resolve_image(image.src, base_dir, base_dir, allow_remote=False)
+                except (OSError, ValueError) as error:
+                    missing = True
+                    warnings.append(ir.Warning("image_unavailable", str(error), block.source))
+    renderer = "not-needed"
+    if counts["mermaid"]:
+        try:
+            mermaid_command()
+            renderer = "available"
+        except RuntimeError as error:
+            missing = True
+            renderer = "missing"
+            first = next(b for b in blocks if isinstance(b, ir.MermaidDiagram))
+            warnings.append(ir.Warning("mermaid_unavailable", str(error), first.source))
+    return {"scope": "source-analysis", "ok": not missing, "counts": counts,
+            "dependencies": {"mermaid_cli": renderer, "remote_images": remote},
+            "unchecked": ["Mermaid syntax/browser launch", "remote image availability", "rendered output fidelity"]}, tuple(warnings)
 
 
 def _report(expected, actual, checks, scope):
