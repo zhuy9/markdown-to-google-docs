@@ -3,9 +3,10 @@
 The project uses a deterministic Python engine shared by thin Codex and Claude
 orchestration. Parsing, DOCX rendering, validation, CLI, Google
 adapter, and shared skill packaging are implemented. Native DOCX import through
-the connected Drive MCP passed live kitchen-sink read-back. Rendered page layout,
-standalone OAuth, direct native creation, and hosted release execution remain
-unverified.
+the connected Drive MCP passed live kitchen-sink read-back. Both pages of a fresh
+Google PDF export were visually inspected. The v0.1.0 tag produced a verified
+draft release. Standalone OAuth and arbitrary document layout remain unverified;
+see the roadmap for per-path evidence.
 
 ## Pipeline and boundaries
 

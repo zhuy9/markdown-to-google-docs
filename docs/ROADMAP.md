@@ -13,8 +13,11 @@
    block upload while default warning behavior remains compatible.
 4. Mermaid sizing diagnostic: complete. 67 offline tests passed; tall diagrams
    warn, while naturally small and width-limited diagrams do not.
-5. Documentation and visual verification: next.
-6. Safe document updates and folder targeting: pending.
+5. Documentation and visual verification: complete. Added the compatibility matrix,
+   real Google-exported demo image, OAuth setup/scopes/revocation, limitations, and
+   reconciled release evidence. Fresh import/read-back passes; both PDF pages were
+   inspected (headings, lists, code, table, images, diagram, rule, literal HTML).
+6. Safe document updates and folder targeting: next.
 
 Follow the original order. Only mark a milestone complete after its acceptance
 checks pass; partial implementation is not completion.
@@ -62,8 +65,7 @@ License: MIT, selected by the owner.
   it in an isolated profile, and the installed converter passed a fixture check.
 - Workflows passed actionlint. [Hosted CI](https://github.com/zhuy9/markdown-to-google-docs/actions/runs/34367365699)
   passed all four Windows/Linux Python jobs and the real Mermaid job for
-  commit `b592b9a`. Tag release execution remains unverified, so milestone 14
-  stays open.
+  commit `b592b9a`. The subsequent tag verification below completed milestone 14.
 - The initial session had no callable Google creation tools. The connected
   verification below completes milestone 10 through DOCX import.
 
@@ -92,8 +94,9 @@ License: MIT, selected by the owner.
 - Raw read-back and reports remain in ignored `.temp/google-verification/`;
   document IDs and temporary image URLs are excluded from tracked evidence.
 
-All milestone acceptance checks now pass. Structural read-back does not
-establish visual layout fidelity, which remains the main unverified property.
+All original milestone acceptance checks passed. Structural read-back alone
+does not establish visual layout fidelity; the review follow-up above adds a
+two-page visual inspection of the synthetic fixture, not a general layout guarantee.
 Durable decisions live in this roadmap and the architecture.
 
 ## Tag release verification (2026-09-09)

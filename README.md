@@ -1,13 +1,18 @@
 # Markdown to Google Docs
 
-Turn Markdown into a formatted Word document (DOCX) for Google Docs.
-Keep headings, lists, tables, links, images, and editable code blocks.
-Mermaid diagrams become images using a local tool; no API key is needed.
+Convert Markdown to Google Docs through a shared Codex/Claude skill or standalone
+CLI, with local Mermaid diagrams, editable code, native tables, and validation.
 
 **Status:** DOCX conversion and native Google Docs import through the connected
-Drive MCP passed kitchen-sink checks. Pictures are checked to fit the printable
-page box. Visual layout fidelity beyond that, and standalone OAuth upload,
-remain unverified.
+Drive MCP passed kitchen-sink checks. Both pages of a fresh Google PDF export
+were visually inspected; the first is shown below. This verifies the fixture,
+not every document layout. Standalone OAuth upload remains unverified live.
+
+![Google Docs PDF export: heading, inline styles, nested lists, editable shaded code, native table, image, Mermaid diagram, and separator](docs/assets/google-docs-demo.png)
+
+Actual first page exported by Google Docs from the
+[kitchen-sink Markdown](tests/fixtures/kitchen-sink.md), with no simulated UI.
+The second page preserves unsupported HTML literally and reports a warning.
 
 ## Prerequisites
 
@@ -32,16 +37,69 @@ Activate with `.venv\Scripts\Activate.ps1` on PowerShell or
 ```bash
 python -m pip install .
 md2gdoc tests/fixtures/basic.md -o output/basic.docx
+md2gdoc tests/fixtures/kitchen-sink.md --dry-run
 ```
 
 For Mermaid diagrams, install Node.js and run `npm ci` first.
 Each conversion saves a DOCX and a JSON report with any warnings.
 HTML stays plain text. Math, footnotes, and task lists are not supported.
 
+## Compatibility
+
+“Native” means editable document content; “Rendered” means an embedded image.
+The DOCX/import column describes the full conversion path. Direct native requests
+support a smaller subset and reject other structures before creating a document.
+
+| Markdown | DOCX → Google Docs import | Direct native requests |
+| --- | --- | --- |
+| Headings / paragraphs | Native styles and text | Native |
+| Bold / italic / links | Native formatting | Native |
+| Ordered / unordered / nested lists | Native lists, starts and nesting | Unsupported |
+| Tables | Native tables and cell formatting | Unsupported |
+| Inline / fenced code | Editable monospace text and shading | Editable monospace text and shading |
+| Mermaid | Rendered PNG; source retained locally | Unsupported |
+| Images | Embedded image; alt text retained | Unsupported |
+| Blockquotes | Indented paragraphs | Unsupported |
+| Horizontal rules | Paragraph border | Unsupported |
+| HTML | Best effort: literal text and warning | Literal text and warning |
+| Task lists / math / footnotes / strikethrough | Unsupported: literal fallback and syntax warnings | Same fallback |
+| Excess table cells | Best effort: whole table kept literally, with warning | Literal fallback |
+
+`--strict` fails on warnings and prevents upload on degradation. `--dry-run`
+checks the source and local dependencies without writing files or contacting
+Google. See [usage and limitations](docs/USAGE.md).
+
+## Mermaid and code
+
+````markdown
+```python
+def identity(value):
+    return value
+```
+
+```mermaid
+graph LR
+  A[Markdown] --> B[Google Docs]
+```
+````
+
+Code stays selectable. Mermaid uses the local official CLI, with no rendering
+service or API key. Missing images and failed diagrams remain visible and fail
+validation. Image downloads require `--allow-remote-images`.
+
+## Google authentication
+
+Local DOCX conversion needs no Google account. A connected Drive MCP handles its
+own sign-in. For standalone upload, install `.[google]`, configure your own desktop
+OAuth client, and use `--upload --credentials /path/to/client.json`.
+See [setup, scopes, token storage, and revocation](docs/USAGE.md#google-authentication).
+
 ## Install as an agent skill
 
 One canonical skill runs in both agents. Each needs the Python engine's two
 dependencies; add Node.js only if you want Mermaid diagrams.
+The packaged installation paths below target Codex and Claude Code;
+ChatGPT-specific installation is not verified.
 
 ```bash
 python -m pip install "markdown-it-py>=4.2,<5" "python-docx>=1.2,<2"
@@ -88,6 +146,7 @@ the archives yourself with `python tools/build_skill.py`.
 ## Contributing
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), and
-[roadmap](docs/ROADMAP.md). Local tests and hosted CI pass.
+[roadmap](docs/ROADMAP.md). The original release passed hosted CI; review patches
+have local test evidence. New hosted runs are needed after these commits are pushed.
 
 [MIT license](LICENSE).

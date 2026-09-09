@@ -5,8 +5,9 @@ Code remains selectable, monospace, and shaded; Mermaid diagrams become PNGs.
 One Python engine powers the CLI and the shared Codex/Claude skill.
 
 **Status:** local conversion, package tests, hosted CI, and one live Google Docs
-import path all pass. Visual layout fidelity and standalone OAuth upload remain
-unverified. See [milestones](ROADMAP.md).
+import path all have verification evidence. Both pages of the synthetic Google
+PDF demo were visually inspected; arbitrary layouts and standalone OAuth upload
+remain unverified. See [milestones](ROADMAP.md).
 
 ## Quick start
 
@@ -72,8 +73,6 @@ styles. Google validation also checks table dimensions and resolves inherited
 named text styles. Its code count reports matched, formatted source blocks.
 These checks do not establish exact pagination, image placement, or pixel fidelity.
 
-## Google Docs
-
 ## Preflight and strict conversion
 
 ```bash
@@ -107,8 +106,19 @@ This path supports paragraphs, headings, styled text, and code. It rejects lists
 tables, quotes, rules, images, and Mermaid before remote creation; use DOCX import
 for those. A request plan is not a created Google Doc.
 
-For standalone OAuth upload, enable Drive and Docs APIs in your own Google Cloud
-project and obtain a desktop OAuth client. Keep it outside the repository:
+### Google authentication
+
+For standalone OAuth upload:
+
+1. Create/select your Google Cloud project and enable both **Google Drive API**
+   (DOCX import) and **Google Docs API** (creation, editing, read-back).
+2. Configure Google Auth Platform branding and audience. For an external app in
+   testing, add the account you will sign in with as a test user.
+3. Create an OAuth client with application type **Desktop app**, download its
+   JSON, and store it outside the checkout. Follow Google's
+   [desktop setup](https://developers.google.com/workspace/drive/api/quickstart/python).
+
+Install the optional Google dependencies and sign in:
 
 ```bash
 python -m pip install ".[google]"
@@ -118,6 +128,31 @@ md2gdoc input.md -o output/document.docx --upload --credentials /private/client.
 First sign-in opens a browser. Tokens default to `~/.config/md2gdoc/token.json`;
 subsequent uploads can omit `--credentials`. Each user supplies their own OAuth
 configuration. No shared credentials belong in this public project.
+
+The only requested scope is `https://www.googleapis.com/auth/drive.file`.
+It authorizes files created by or explicitly opened/shared with this OAuth app,
+and supports the converter's Drive and Docs operations. It does not grant access
+to every document in your Drive. A file available through a separate MCP app is
+not automatically available to this desktop client.
+See [Google's scope guidance](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
+
+The token file contains access and refresh credentials. Newly created token files
+use owner-only permissions on POSIX; protect their containing directory and use
+appropriate account permissions on Windows. `--token /path/token.json` selects
+another location. Avoid placing credentials in a shared or synced folder.
+
+To revoke access, remove your OAuth app in your Google Account's third-party
+connections, then delete the local token file. Removing the local file alone
+does not revoke the grant. Google also documents
+[token revocation](https://developers.google.com/identity/protocols/oauth2/native-app#tokenrevoke).
+
+If sign-in is denied, check audience/test users and your organization's OAuth
+policy. If refresh fails after revocation or expiry, remove the obsolete token
+and sign in again with `--credentials`. For missing Google modules, install
+`.[google]` with the same Python used to run the converter. For API-disabled
+errors, enable both APIs in the client's project. A 404/403 can mean the signed-in
+account or this app lacks access. `--dry-run` does not test authentication or API
+availability; there are no separate `auth setup/status` commands yet.
 
 Alternatively, upload the DOCX to Drive and open it with Google Docs. Check the
 imported result: local validation does not establish Google import fidelity.
@@ -159,7 +194,10 @@ and Linux, builds wheels/source distributions and both skill ZIPs, and exercises
 the real Mermaid CLI on Windows. Pushing a version-matching `v*` tag creates a
 draft GitHub release after checks pass; publishing the draft is an owner action.
 Hosted CI passed on Windows and Linux, including real Mermaid rendering.
-The version-tag release workflow still needs verification.
+The `v0.1.0` tag workflow built and attached the expected artifacts to a verified
+draft. That evidence does not establish a public release or that the latest-asset
+download URL is available; if unavailable, build the archives locally. The current
+review patches have local checks and require a new hosted run after pushing.
 
 Read [architecture](ARCHITECTURE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and
 [AGENTS.md](../AGENTS.md). `CLAUDE.md` is a relative symlink to `AGENTS.md`.
