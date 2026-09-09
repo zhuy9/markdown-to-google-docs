@@ -4,8 +4,9 @@ Convert Markdown into styled DOCX, with an optional Google Docs delivery path.
 Code remains selectable, monospace, and shaded; Mermaid diagrams become PNGs.
 One Python engine powers the CLI and the shared Codex/Claude skill.
 
-**Status:** local conversion and package tests pass. Live Google creation/import
-still needs verification with a connected account. See [milestones](ROADMAP.md).
+**Status:** local conversion, package tests, hosted CI, and one live Google Docs
+import path all pass. Visual layout fidelity and standalone OAuth upload remain
+unverified. See [milestones](ROADMAP.md).
 
 ## Quick start
 
@@ -22,6 +23,13 @@ For Mermaid, install Node.js and run `npm ci` in this repository, then:
 
 ```bash
 md2gdoc tests/fixtures/kitchen-sink.md -o output/kitchen-sink.docx
+```
+
+Diagrams render at 3x pixel density. Because images are capped to the page
+width, `--mermaid-scale` (1-5) changes sharpness rather than size:
+
+```bash
+md2gdoc input.md --mermaid-scale 5 -o output/sharp.docx
 ```
 
 The [official Mermaid CLI](https://github.com/mermaid-js/mermaid-cli) runs locally;

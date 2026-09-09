@@ -2,11 +2,13 @@
 
 import argparse
 from dataclasses import asdict
+from functools import partial
 import json
 from pathlib import Path
 import sys
 
 from .google_docs import build_requests, create_document, google_clients, import_docx
+from .mermaid import render_mermaid
 from .parser import parse_markdown
 from .renderer import render_docx
 from .validator import validate_docx, validate_google
@@ -19,6 +21,8 @@ def main(argv=None) -> int:
     parser.add_argument("--format", choices=("docx", "google-requests"), default="docx")
     parser.add_argument("--title", help="Title for an uploaded Google Doc (default: input filename).")
     parser.add_argument("--allow-remote-images", action="store_true", help="Allow downloading HTTP(S) image references.")
+    parser.add_argument("--mermaid-scale", type=int, choices=range(1, 6), default=3,
+                        metavar="{1..5}", help="Mermaid pixel density; higher is sharper (default: 3).")
     parser.add_argument("--upload", action="store_true", help="Create a new Google Doc using your own OAuth account.")
     parser.add_argument("--credentials", type=Path, help="Google desktop OAuth client JSON for first sign-in.")
     parser.add_argument("--token", type=Path, default=Path.home() / ".config/md2gdoc/token.json")
@@ -33,6 +37,7 @@ def main(argv=None) -> int:
         output.parent.mkdir(parents=True, exist_ok=True)
         if args.format == "docx":
             warnings = render_docx(document, output, base_dir=args.input.resolve().parent,
+                                   mermaid_renderer=partial(render_mermaid, scale=args.mermaid_scale),
                                    allow_remote_images=args.allow_remote_images)
             report = validate_docx(document, output)
         else:

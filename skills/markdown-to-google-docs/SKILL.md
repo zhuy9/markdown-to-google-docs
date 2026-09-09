@@ -20,6 +20,9 @@ python <skill-directory>/scripts/convert.py input.md -o output/document.docx
 
 Mermaid requires the official CLI: run `npm install -g @mermaid-js/mermaid-cli@11.17.0`
 or `npm ci` in the source repository. Rendering is local and needs no key.
+Diagrams render at `--mermaid-scale 3` by default. The renderer caps display
+width, so a higher scale (maximum 5) only sharpens print output. Raise it when
+the user reports soft or blurry diagrams; larger scales cost render time.
 Images resolve against the Markdown file's directory. HTTP(S) downloads require
 `--allow-remote-images`; use only when fetching those references is authorized.
 

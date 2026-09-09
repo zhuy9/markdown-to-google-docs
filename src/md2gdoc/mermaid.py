@@ -5,7 +5,7 @@ import shutil
 import subprocess
 
 
-def render_mermaid(source: str, output: Path) -> Path:
+def render_mermaid(source: str, output: Path, scale: int = 3) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     input_path = output.with_suffix(".mmd")
     input_path.write_text(source, encoding="utf-8")
@@ -24,7 +24,10 @@ def render_mermaid(source: str, output: Path) -> Path:
     else:
         raise RuntimeError("Install Mermaid CLI with npm install -g @mermaid-js/mermaid-cli.")
     try:
-        subprocess.run(command + ["-i", str(input_path), "-o", str(output), "-b", "white"],
+        # ponytail: scale is the only resolution knob; the renderer caps display width,
+        # so a higher scale raises effective DPI. Raise it if diagrams look soft in print.
+        subprocess.run(command + ["-i", str(input_path), "-o", str(output), "-b", "white",
+                                  "-s", str(scale)],
                        check=True, capture_output=True, text=True, timeout=60)
     except subprocess.CalledProcessError as error:
         raise RuntimeError("Mermaid render failed: " + error.stderr.strip()[:600]) from error

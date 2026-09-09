@@ -4,6 +4,9 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
+
+from md2gdoc.cli import main
 
 
 class CLITests(unittest.TestCase):
@@ -35,6 +38,19 @@ class CLITests(unittest.TestCase):
         report = json.loads(self.output.with_suffix(".report.json").read_text())
         self.assertFalse(report["ok"])
         self.assertEqual(report["warnings"][0]["code"], "image_unavailable")
+
+    def test_mermaid_scale_reaches_the_renderer(self):
+        self.input.write_text("# Title\n", encoding="utf-8")
+        with patch("md2gdoc.cli.render_docx", return_value=()) as render:
+            with patch("md2gdoc.cli.validate_docx", return_value={"ok": True}):
+                main([str(self.input), "-o", str(self.output), "--mermaid-scale", "5"])
+        self.assertEqual(render.call_args.kwargs["mermaid_renderer"].keywords, {"scale": 5})
+
+    def test_mermaid_scale_rejects_values_the_cli_cannot_render(self):
+        self.input.write_text("# Title\n", encoding="utf-8")
+        result = self.run_cli("--mermaid-scale", "9")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--mermaid-scale", result.stderr)
 
     def test_input_cannot_be_overwritten(self):
         self.input.write_text("Keep this source")
