@@ -63,6 +63,47 @@ class ValidationTests(unittest.TestCase):
         body["content"][0]["paragraph"]["paragraphStyle"] = {}
         self.assertFalse(validate_google(source, document)["ok"])
 
+    def test_google_connector_flattened_tabs_and_native_child_tabs(self):
+        source = parse_markdown("# First\n\n# Second")
+        bodies = [{"content": [{"paragraph": {
+            "paragraphStyle": {"namedStyleType": "HEADING_1"},
+            "elements": [{"textRun": {"content": text + "\n"}}],
+        }}]} for text in ("First", "Second")]
+        for tabs in (
+            [{"tabId": "first", "body": bodies[0]}, {"tabId": "second", "body": bodies[1]}],
+            [{"documentTab": {"body": bodies[0]}, "childTabs": [{"documentTab": {"body": bodies[1]}}]}],
+        ):
+            with self.subTest(tabs=tabs):
+                self.assertTrue(validate_google(source, {"tabs": tabs})["ok"])
+
+    def test_google_imported_code_keeps_soft_breaks_indentation_and_paragraph_shading(self):
+        source = parse_markdown("```python\ndef identity(value):\n    return value\n```")
+        background = {"color": {"rgbColor": {"red": 0.95}}}
+        run = {"content": "def identity(value):\u000b    return value\u000b\n", "textStyle": {
+            "weightedFontFamily": {"fontFamily": "Courier New"}, "backgroundColor": {},
+        }}
+        paragraph = {"paragraphStyle": {"shading": {"backgroundColor": background}},
+                     "elements": [{"textRun": run}]}
+        document = {"body": {"content": [{"paragraph": paragraph}]}}
+        self.assertTrue(validate_google(source, document)["ok"])
+        paragraph["paragraphStyle"]["shading"]["backgroundColor"] = {}
+        self.assertFalse(validate_google(source, document)["checks"]["code_formatting"])
+        run["textStyle"]["backgroundColor"] = background
+        self.assertTrue(validate_google(source, document)["ok"])
+        run["content"] = run["content"].replace("    return", "return")
+        self.assertFalse(validate_google(source, document)["ok"])
+
+    def test_google_zero_width_border_is_not_a_horizontal_rule(self):
+        source = parse_markdown("Paragraph\n\n---")
+        document = {"body": {"content": [
+            {"paragraph": {"paragraphStyle": {"borderBottom": {"width": {"unit": "PT"}}},
+                           "elements": [{"textRun": {"content": "Paragraph\n"}}]}},
+            {"paragraph": {"paragraphStyle": {"borderBottom": {"width": {"magnitude": 0.75, "unit": "PT"}}}}},
+        ]}}
+        self.assertTrue(validate_google(source, document)["ok"])
+        document["body"]["content"][1]["paragraph"]["paragraphStyle"]["borderBottom"]["width"]["magnitude"] = 0
+        self.assertFalse(validate_google(source, document)["ok"])
+
 
 if __name__ == "__main__":
     unittest.main()

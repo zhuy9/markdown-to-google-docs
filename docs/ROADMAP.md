@@ -14,7 +14,7 @@ checks pass; partial implementation is not completion.
 | 7 | Tables | Header, cells, inline formatting, and alignment preserved; structural indexes tested | Complete (local checks) |
 | 8 | Images | Relative paths resolve against source directory; alt text preserved; missing assets reported | Complete (local checks) |
 | 9 | Mermaid | Provider validates syntax and returns PNG; source retained; failures produce warnings and readable source | Complete (local checks) |
-| 10 | Google Docs integration | Discover actual MCP capabilities; create and read back a fixture document, or generate DOCX and verify import; report which path and checks ran | Implemented; live verification pending |
+| 10 | Google Docs integration | Discover actual MCP capabilities; create and read back a fixture document, or generate DOCX and verify import; report which path and checks ran | Complete (live DOCX import and read-back) |
 | 11 | Validation | Expected/observed element counts expose missing content; blockquotes and rules verified; unsupported HTML reported; code not mistaken for leaked Markdown | Complete (local checks) |
 | 12 | Agent Skill packaging | One vendor-neutral skill invokes the engine, reports degradation, and validates/builds into an installable ZIP | Complete (local checks) |
 | 13 | Claude marketplace packaging | Marketplace installs the same canonical skill; no duplicated runtime instructions | Complete (local checks) |
@@ -48,10 +48,34 @@ License: MIT, selected by the owner.
   passed all four Windows/Linux Python jobs and the real Mermaid job for
   commit `b592b9a`. Tag release execution remains unverified, so milestone 14
   stays open.
-- No callable Google Docs/Drive creation tools were exposed in this session.
-  No live Google document was created, imported, or read back. Milestone 10 is
-  the next unfinished acceptance check; use a synthetic fixture when connected.
+- The initial session had no callable Google creation tools. The connected
+  verification below completes milestone 10 through DOCX import.
 
-Local structural checks do not establish visual layout fidelity in Word or
-Google Docs. Review an imported fixture before describing Google support as
-verified. Durable decisions live in this roadmap and the architecture.
+## Live Google verification (2026-09-09)
+
+- Converted `tests/fixtures/kitchen-sink.md` with the existing CLI and local
+  Mermaid renderer; all local DOCX checks passed. Imported it with the connected
+  `google_drive_import_document` tool using `native_google_docs`, then read it
+  with `google_drive_get_document`. Drive metadata confirmed native Google Docs
+  MIME type, the `ChatGPT` destination folder, and `shared: false`.
+- `validate_google` passed against the live response: 1 heading, 1 table,
+  1 selectable code block, 2 images (local image and Mermaid), 1 rule, 5 list
+  items, and 1 link destination. Text, links, monospace code, indentation, and
+  shading survived. HTML stayed literal with the expected `unsupported_html`
+  warning.
+- Additional read-back checks confirmed ordered numbering starts at 3, nested
+  bullets, the unnumbered continuation paragraph, quote indentation, the 2x2
+  table and its cell text, bold/italic text, and image alt text/title.
+- Fixed validator assumptions exposed by the live response: flattened MCP tabs,
+  imported soft line breaks, paragraph shading, and zero-width borders. Three
+  regression tests reproduce those shapes and detect missing shading, changed
+  code indentation, and a missing rule.
+- PDF export succeeded (76,248 bytes), but the runtime could not materialize the
+  returned file reference for rendered-page inspection. Layout fidelity remains
+  unverified. Direct native creation and standalone OAuth were not live-tested.
+- Raw read-back and reports remain in ignored `.temp/google-verification/`;
+  document IDs and temporary image URLs are excluded from tracked evidence.
+
+Milestone 14's tag release execution is the next unfinished acceptance check.
+Structural read-back does not establish visual layout fidelity. Durable
+decisions live in this roadmap and the architecture.

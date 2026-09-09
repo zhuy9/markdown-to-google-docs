@@ -4,8 +4,9 @@ Turn Markdown into a formatted Word document (DOCX) for Google Docs.
 Keep headings, lists, tables, links, images, and editable code blocks.
 Mermaid diagrams become images using a local tool; no API key is needed.
 
-**Status:** DOCX conversion is tested. Google Docs upload and import still
-need live verification.
+**Status:** DOCX conversion and native Google Docs import through the connected
+Drive MCP passed kitchen-sink checks. Rendered page layout and standalone OAuth
+upload remain unverified.
 
 ## Prerequisites
 

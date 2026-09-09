@@ -97,7 +97,7 @@ def _google_elements(content):
 
 def _google_tabs(tabs):
     for tab in tabs:
-        yield from _google_elements(tab.get("documentTab", {}).get("body", {}).get("content", []))
+        yield from _google_elements((tab.get("documentTab", tab).get("body") or {}).get("content", []))
         yield from _google_tabs(tab.get("childTabs", []))
 
 
@@ -108,15 +108,18 @@ def validate_google(source: ir.Document, document: dict) -> dict:
     links = {run["textStyle"]["link"]["url"] for run in runs if run.get("textStyle", {}).get("link", {}).get("url")}
     expected, texts, expected_links, blocks = _expected(source)
     expected["images"] += expected.pop("mermaid")
-    mono = "".join(run.get("content", "") for run in runs if run.get("textStyle", {}).get("weightedFontFamily", {}).get("fontFamily") == "Courier New")
-    shaded = "".join(run.get("content", "") for run in runs if run.get("textStyle", {}).get("backgroundColor"))
+    mono = "".join(run.get("content", "") for run in runs if run.get("textStyle", {}).get("weightedFontFamily", {}).get("fontFamily") == "Courier New").replace("\u000b", "\n")
+    shaded = "".join(element.get("textRun", {}).get("content", "")
+                     for paragraph in paragraphs for element in paragraph.get("elements", [])
+                     if paragraph.get("paragraphStyle", {}).get("shading", {}).get("backgroundColor") or
+                     element.get("textRun", {}).get("textStyle", {}).get("backgroundColor")).replace("\u000b", "\n")
     codes = [block.text.rstrip("\n") for block in blocks if isinstance(block, ir.CodeBlock)]
     actual = {
         "headings": sum(paragraph.get("paragraphStyle", {}).get("namedStyleType", "").startswith("HEADING_") for paragraph in paragraphs),
         "tables": sum("table" in element for element in elements),
         "code_blocks": sum(code in mono for code in codes),
         "images": sum("inlineObjectElement" in element for paragraph in paragraphs for element in paragraph.get("elements", [])),
-        "rules": sum(bool(paragraph.get("paragraphStyle", {}).get("borderBottom")) or
+        "rules": sum(paragraph.get("paragraphStyle", {}).get("borderBottom", {}).get("width", {}).get("magnitude", 0) > 0 or
                      any("horizontalRule" in element for element in paragraph.get("elements", [])) for paragraph in paragraphs),
         "list_items": sum("bullet" in paragraph for paragraph in paragraphs), "link_destinations": len(links),
     }

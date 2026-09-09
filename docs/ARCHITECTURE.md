@@ -2,8 +2,10 @@
 
 The project uses a deterministic Python engine shared by thin Codex and Claude
 orchestration. Parsing, DOCX rendering, validation, CLI, Google
-adapter, and shared skill packaging are implemented. Live Google read-back
-and hosted release execution remain unverified.
+adapter, and shared skill packaging are implemented. Native DOCX import through
+the connected Drive MCP passed live kitchen-sink read-back. Rendered page layout,
+standalone OAuth, direct native creation, and hosted release execution remain
+unverified.
 
 ## Pipeline and boundaries
 
