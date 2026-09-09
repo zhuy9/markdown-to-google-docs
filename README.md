@@ -38,13 +38,52 @@ For Mermaid diagrams, install Node.js and run `npm ci` first.
 Each conversion saves a DOCX and a JSON report with any warnings.
 HTML stays plain text. Math, footnotes, and task lists are not supported.
 
-## Google Docs and agent skills
+## Install as an agent skill
 
-Upload the DOCX to Drive and open it with Google Docs. Optional direct upload
-uses your own Google sign-in. Keep credentials and tokens outside this repo.
+One canonical skill runs in both agents. Each needs the Python engine's two
+dependencies; add Node.js only if you want Mermaid diagrams.
 
-The same skill works with Codex and Claude.
-See [setup and usage](docs/USAGE.md) for Google upload and skill installation.
+```bash
+python -m pip install "markdown-it-py>=4.2,<5" "python-docx>=1.2,<2"
+```
+
+### Claude Code
+
+Add this repository as a plugin marketplace, then install from it:
+
+```text
+/plugin marketplace add zhuy9/markdown-to-google-docs
+/plugin install markdown-to-google-docs@markdown-to-google-docs
+```
+
+The same two commands work outside a session as `claude plugin marketplace add`
+and `claude plugin install`. A local checkout can be used as the marketplace
+source instead: pass its absolute path to `marketplace add`.
+
+### Codex
+
+Extract the skill archive into a skills directory Codex scans, either
+`~/.agents/skills` for every project or `.agents/skills` inside one repository:
+
+```bash
+mkdir -p ~/.agents/skills
+curl -L -o skill.zip https://github.com/zhuy9/markdown-to-google-docs/releases/latest/download/markdown-to-google-docs-skill.zip
+unzip skill.zip -d ~/.agents/skills
+```
+
+The archive already contains a copy of the engine, so no checkout is needed.
+Invoke it with `$markdown-to-google-docs`, or run `/skills` to browse.
+
+### Using it
+
+Ask the agent to convert a Markdown file. It writes a DOCX plus a JSON report,
+then either uploads through a connected Google Drive tool or hands back the file
+to import yourself. Upload the DOCX to Drive and open it with Google Docs;
+optional direct upload uses your own Google sign-in. Keep credentials and tokens
+outside this repository.
+
+See [setup and usage](docs/USAGE.md) for Google upload details and for building
+the archives yourself with `python tools/build_skill.py`.
 
 ## Contributing
 
