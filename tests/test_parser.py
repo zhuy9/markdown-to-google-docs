@@ -29,6 +29,32 @@ def fixture(name: str) -> str:
 
 
 class ParserTests(unittest.TestCase):
+    def test_overflow_table_cells_survive_in_literal_fallback(self):
+        for prefix in ("", "> ", "  "):
+            markdown = "\n".join(prefix + line for line in ("| H |", "| --- |", "| kept | LOST |"))
+            document = parse_markdown(markdown)
+            block = document.blocks[0]
+            if isinstance(block, Blockquote):
+                block = block.blocks[0]
+            self.assertIsInstance(block, Paragraph)
+            self.assertIn("LOST", block.inlines[0].text)
+            self.assertEqual(document.warnings[0].code, "malformed_table")
+            self.assertEqual(document.warnings[0].source, SourceRange(2, 3))
+
+    def test_footnotes_stay_literal_instead_of_becoming_reference_links(self):
+        document = parse_markdown('Note[^1].\n\n[^1]: https://example.com/ "Explanation"')
+        self.assertEqual(len(document.blocks), 2)
+        self.assertIn('"Explanation"', document.blocks[1].inlines[0].text)
+        self.assertFalse(any(span.link for block in document.blocks for span in block.inlines))
+        self.assertTrue(all(w.code == "unsupported_footnote" for w in document.warnings))
+
+    def test_extension_warnings_exclude_code_and_escaped_syntax(self):
+        document = parse_markdown('- [x] Done\n\n$x^2$ and ~~old~~ and [^note].')
+        self.assertEqual({w.code for w in document.warnings}, {
+            "unsupported_task_list", "unsupported_math", "unsupported_strikethrough", "unsupported_footnote"})
+        self.assertEqual(parse_markdown('`$x$ ~~old~~ [^note]`\n\n```\n- [x] Done\n```').warnings, ())
+        self.assertEqual(parse_markdown(r'\$x\$ and \~\~old\~\~ and \[^note]').warnings, ())
+
     def test_empty_input(self):
         for text in ("", "\n\n", " \t\r\n"):
             with self.subTest(text=text):

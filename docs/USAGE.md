@@ -48,6 +48,12 @@ HTML is preserved literally with a warning. Other Markdown extensions, including
 math, footnotes, and task lists, are outside this MVP. Mermaid or image failures
 produce visible fallback content and a failed validation report.
 
+Tables with excess cells fall back to literal source instead of losing cells.
+Footnote-like definitions remain visible instead of becoming reference links.
+Task-list, dollar-math, footnote, and strikethrough syntax produce source-line
+warnings; detection is best effort and excludes fenced/inline code and escaped
+markers. These warnings describe unsupported syntax, not rendered extensions.
+
 Pictures are scaled to fit the printable page box, preserving aspect ratio. A
 Mermaid diagram too tall for one page still fits, but prints smaller than the
 text width and reports a `mermaid_scaled_to_page` warning with its source lines;

@@ -1,8 +1,11 @@
 """Normalize CommonMark and pipe tables into the document IR without I/O."""
 
 from dataclasses import replace
+import re
 
 from markdown_it import MarkdownIt
+from markdown_it.rules_block import reference, table
+from markdown_it.rules_block.table import escapedSplit, getLine
 from markdown_it.tree import SyntaxTreeNode
 
 from . import models as ir
@@ -10,10 +13,63 @@ from . import models as ir
 
 def parse_markdown(text: str) -> ir.Document:
     """Parse text, preserving HTML literally and deferring asset rendering."""
-    tree = SyntaxTreeNode(MarkdownIt("commonmark").enable("table").parse(text))
     warnings: list[ir.Warning] = []
+    parser = MarkdownIt("commonmark").enable("table")
+    parser.block.ruler.at("table", _table_no_loss)
+    parser.block.ruler.at("reference", _reference_no_footnotes)
+    parser.core.ruler.before("text_join", "extension_warnings", _extension_warnings)
+    tree = SyntaxTreeNode(parser.parse(text, {"warnings": warnings}))
     blocks = tuple(_block(node, warnings) for node in tree.children)
     return ir.Document(blocks, tuple(warnings))
+
+
+def _reference_no_footnotes(state, start, end, silent):
+    if getLine(state, start).lstrip().startswith("[^"):
+        return False
+    return reference(state, start, end, silent)
+
+
+def _table_no_loss(state, start, end, silent):
+    offset = len(state.tokens)
+    if not table(state, start, end, silent):
+        return False
+    if not silent:
+        width = sum(token.type == "th_open" for token in state.tokens[offset:])
+        for token in state.tokens[offset:]:
+            if token.type != "tr_open" or token.map[0] == start:
+                continue
+            cells = escapedSplit(getLine(state, token.map[0]).strip())
+            cells = cells[1:] if cells and cells[0] == "" else cells
+            cells = cells[:-1] if cells and cells[-1] == "" else cells
+            if len(cells) > width:
+                state.env["warnings"].append(ir.Warning(
+                    "malformed_table", "Extra table cells: the table is preserved as literal text.",
+                    ir.SourceRange(*token.map)))
+                content = state.getLines(start, state.line, state.blkIndent, True)
+                del state.tokens[offset:]
+                literal = state.push("literal_block", "", 0)
+                literal.content, literal.map = content, [start, state.line]
+                break
+    return True
+
+
+def _extension_warnings(state):
+    # ponytail: syntax hints, not extension parsers; add a dialect plugin if rendering is needed.
+    patterns = {
+        "task_list": r"^\[[ xX]\]\s",
+        "math": r"\$\$|\$[^\s$][^$]*\$",
+        "strikethrough": r"~~\S.*?~~",
+        "footnote": r"\[\^[^\]]+\]",
+    }
+    for token in state.tokens:
+        if token.type != "inline":
+            continue
+        plain = [child.content for child in token.children if child.type == "text"]
+        for name, pattern in patterns.items():
+            if any(re.search(pattern, text) for text in plain):
+                state.env["warnings"].append(ir.Warning(
+                    "unsupported_" + name, f"Possible {name.replace('_', ' ')} syntax is preserved literally.",
+                    ir.SourceRange(*token.map)))
 
 
 def _source(node: SyntaxTreeNode) -> ir.SourceRange:
@@ -58,6 +114,8 @@ def _block(node: SyntaxTreeNode, warnings: list[ir.Warning]) -> ir.Block:
             return ir.HorizontalRule(source)
         case "html_block":
             _warn_html(source, warnings)
+            return ir.Paragraph((ir.TextSpan(node.content),), source)
+        case "literal_block":
             return ir.Paragraph((ir.TextSpan(node.content),), source)
         case _:
             raise ValueError(f"Unexpected Markdown block: {node.type}")

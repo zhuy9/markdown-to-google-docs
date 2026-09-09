@@ -1,5 +1,16 @@
 # Milestones and acceptance criteria
 
+## Review follow-ups
+
+1. Parser loss prevention: complete. Overflow tables fall back to literal text;
+   footnotes remain literal; extension warnings exclude code/escapes. 59 offline
+   tests passed, including three new regressions.
+2. Validation fidelity: next.
+3. Strict and dry-run CLI: pending.
+4. Mermaid sizing diagnostic: pending.
+5. Documentation and visual verification: pending.
+6. Safe document updates and folder targeting: pending.
+
 Follow the original order. Only mark a milestone complete after its acceptance
 checks pass; partial implementation is not completion.
 
