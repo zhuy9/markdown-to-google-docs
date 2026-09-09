@@ -57,7 +57,7 @@ License: MIT, selected by the owner.
   Mermaid renderer; all local DOCX checks passed. Imported it with the connected
   `google_drive_import_document` tool using `native_google_docs`, then read it
   with `google_drive_get_document`. Drive metadata confirmed native Google Docs
-  MIME type, the `ChatGPT` destination folder, and `shared: false`.
+  MIME type, the intended destination folder, and `shared: false`.
 - `validate_google` passed against the live response: 1 heading, 1 table,
   1 selectable code block, 2 images (local image and Mermaid), 1 rule, 5 list
   items, and 1 link destination. Text, links, monospace code, indentation, and

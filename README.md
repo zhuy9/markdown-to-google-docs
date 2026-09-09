@@ -5,8 +5,9 @@ Keep headings, lists, tables, links, images, and editable code blocks.
 Mermaid diagrams become images using a local tool; no API key is needed.
 
 **Status:** DOCX conversion and native Google Docs import through the connected
-Drive MCP passed kitchen-sink checks. Rendered page layout and standalone OAuth
-upload remain unverified.
+Drive MCP passed kitchen-sink checks. Pictures are checked to fit the printable
+page box. Visual layout fidelity beyond that, and standalone OAuth upload,
+remain unverified.
 
 ## Prerequisites
 

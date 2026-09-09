@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 - 2026-09-09
+
+- Fit pictures to the printable page box; tall Mermaid diagrams no longer run
+  off the page, and a squeezed diagram reports `mermaid_scaled_to_page`.
+- Added the `images_fit_page` validation check.
+- Rendered Mermaid at 3x pixel density with a `--mermaid-scale` flag (1-5).
+
 ## 0.1.0 - 2026-09-09
 
 - Implemented styled DOCX rendering, local Mermaid PNGs, image resolution, and validation reports.
