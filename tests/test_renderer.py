@@ -1,12 +1,26 @@
 from pathlib import Path
+import struct
 from tempfile import TemporaryDirectory
 import unittest
+import zlib
 
 from docx import Document
 from docx.oxml.ns import qn
 
 from md2gdoc.parser import parse_markdown
 from md2gdoc.renderer import render_docx
+
+
+def write_png(path: Path, width: int, height: int) -> Path:
+    """Smallest valid PNG of a given size, so tests need no image library."""
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    rows = b"".join(b"\x00" + b"\xff" * (width * 3) for _ in range(height))
+    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) +
+                     chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b""))
+    return path
 
 
 class RendererTests(unittest.TestCase):
@@ -74,6 +88,22 @@ class RendererTests(unittest.TestCase):
         self.assertTrue(document.paragraphs[1]._p.xpath("./w:pPr/w:pBdr/w:bottom"))
         self.assertIn("<details>", document.paragraphs[2].text)
         self.assertEqual(warnings[0].code, "unsupported_html")
+
+    def test_tall_diagram_fits_the_page_and_warns(self):
+        directory = TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        output = root / "document.docx"
+        warnings = render_docx(parse_markdown("```mermaid\ngraph TD\n A --> B\n```\n"), output,
+                               base_dir=root,
+                               mermaid_renderer=lambda source, path: write_png(path, 400, 6000))
+        document = Document(output)
+        section = document.sections[0]
+        shape = document.inline_shapes[0]
+        self.assertLessEqual(shape.height, section.page_height - section.top_margin - section.bottom_margin)
+        self.assertLessEqual(shape.width, section.page_width - section.left_margin - section.right_margin)
+        self.assertEqual(round(shape.width / shape.height, 2), round(400 / 6000, 2))
+        self.assertEqual([warning.code for warning in warnings], ["mermaid_scaled_to_page"])
 
     def test_missing_image_remains_visible_with_warning(self):
         document, warnings = self.render("![A chart](missing.png)")

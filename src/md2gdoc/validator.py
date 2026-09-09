@@ -59,6 +59,13 @@ def _report(expected, actual, checks, scope):
     return {"scope": scope, "ok": all(checks.values()), "counts": counts, "checks": checks}
 
 
+def _box(document) -> tuple[int, int]:
+    """Printable area of the first section, in EMU."""
+    section = document.sections[0]
+    return (section.page_width - section.left_margin - section.right_margin,
+            section.page_height - section.top_margin - section.bottom_margin)
+
+
 def validate_docx(source: ir.Document, path: Path) -> dict:
     document = Document(path)
     root = document.element
@@ -81,6 +88,8 @@ def validate_docx(source: ir.Document, path: Path) -> dict:
         "links_preserved": expected_links == links,
         "code_formatting": all(paragraph._p.xpath("./w:pPr/w:shd") and
                                all(run.font.name == "Courier New" for run in paragraph.runs) for paragraph in code),
+        "images_fit_page": all(shape.width <= _box(document)[0] and shape.height <= _box(document)[1]
+                               for shape in document.inline_shapes),
         "table_shape": [(len(table.rows), len(table.columns)) for table in document.tables] ==
                        [(1 + len(block.rows), len(block.header)) for block in blocks if isinstance(block, ir.Table)],
     }

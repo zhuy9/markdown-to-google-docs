@@ -48,6 +48,11 @@ HTML is preserved literally with a warning. Other Markdown extensions, including
 math, footnotes, and task lists, are outside this MVP. Mermaid or image failures
 produce visible fallback content and a failed validation report.
 
+Pictures are scaled to fit the printable page box, preserving aspect ratio. A
+Mermaid diagram too tall for one page still fits, but prints smaller than the
+text width and reports a `mermaid_scaled_to_page` warning with its source lines;
+splitting the graph or laying it out left-to-right reads better than shrinking.
+
 Each conversion writes a sibling `.report.json`: expected/observed counts,
 content and formatting checks, warnings, and verification scope. Exit codes:
 `0` checks passed within that scope, `1` validation/upload failed, `2` conversion

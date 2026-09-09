@@ -62,6 +62,7 @@ class _Writer:
         self.allow_remote_images = allow_remote_images
         section = self.doc.sections[0]
         self.width = section.page_width - section.left_margin - section.right_margin
+        self.height = section.page_height - section.top_margin - section.bottom_margin
 
     def paragraph(self, block, depth, existing=None):
         paragraph = existing if existing is not None else self.doc.add_paragraph()
@@ -166,9 +167,9 @@ class _Writer:
 
     def picture(self, paragraph, path, alt, title, width):
         shape = paragraph.add_run().add_picture(str(path))
-        if shape.width > width:
-            shape.height = round(shape.height * width / shape.width)
-            shape.width = width
+        fit = min(1, width / shape.width, self.height / shape.height)
+        if fit < 1:
+            shape.width, shape.height = round(shape.width * fit), round(shape.height * fit)
         shape._inline.docPr.set("descr", alt)
         if title:
             shape._inline.docPr.set("title", title)
@@ -194,8 +195,15 @@ class _Writer:
         try:
             rendered = self.mermaid_renderer(block.text, path)
             paragraph = self.doc.add_paragraph()
-            shape = self.picture(paragraph, rendered, "Mermaid diagram", None, self.width - Inches(depth / 4))
+            available = self.width - Inches(depth / 4)
+            shape = self.picture(paragraph, rendered, "Mermaid diagram", None, available)
             shape._inline.docPr.set("name", name)
+            if shape.width < available:
+                self.warnings.append(ir.Warning(
+                    "mermaid_scaled_to_page",
+                    f"Diagram is too tall for one page and was scaled to {shape.width / available:.0%} "
+                    "of the text width, so it may print small. Split it or lay it out left-to-right.",
+                    block.source))
         except (OSError, RuntimeError, ValueError, InvalidImageStreamError, UnexpectedEndOfFileError, UnrecognizedImageError) as error:
             self.warnings.append(ir.Warning("mermaid_failed", str(error), block.source))
             self.block(ir.CodeBlock(block.text, "mermaid", block.source), depth)
