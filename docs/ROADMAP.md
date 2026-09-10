@@ -140,6 +140,14 @@ Durable decisions live in this roadmap and the architecture.
 - Reconciled stale release evidence: hosted CI passes on the current main commit,
   `v0.1.1` is published with all four assets, and the
   `releases/latest/download` skill-archive URL returns 200.
-- Outstanding before tagging: push these commits, confirm the hosted checks run,
-  then push `v0.2.0`. Standalone OAuth and folder targeting are still not
-  exercised live, and installing from a published asset is still unexercised.
+- Hosted checks passed on the release commit `3a6ffbc`: all four Windows/Linux
+  Python jobs and the real Mermaid job.
+- Tag `v0.2.0` ran the release workflow to success. Its version assertion matched
+  the tag to the packaged `0.2.0`, and the draft received all four expected
+  artifacts. Downloaded draft assets confirm `0.2.0` in the wheel metadata and
+  the plugin manifest, the MIT license file, and the `Darren Zhu` marketplace
+  owner. The downloaded skill archive converted a table fixture outside any
+  checkout with all local checks passing.
+- Outstanding: publishing the draft is an owner action. Standalone OAuth and
+  folder targeting are still not exercised live, and installing from a published
+  release asset is still unexercised.
