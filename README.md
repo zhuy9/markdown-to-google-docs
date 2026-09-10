@@ -159,6 +159,6 @@ the archives yourself with `python tools/build_skill.py`.
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), and
 [roadmap](docs/ROADMAP.md). Hosted CI passes on the current main commit, and
-`v0.1.1` is published with all four release assets.
+`v0.2.0` is published with all four release assets.
 
 [MIT license](LICENSE).

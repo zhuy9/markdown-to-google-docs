@@ -55,7 +55,7 @@ checks pass; partial implementation is not completion.
 | 11 | Validation | Expected/observed element counts expose missing content; blockquotes and rules verified; unsupported HTML reported; code not mistaken for leaked Markdown | Complete (local checks) |
 | 12 | Agent Skill packaging | One vendor-neutral skill invokes the engine, reports degradation, and validates/builds into an installable ZIP | Complete (local checks) |
 | 13 | Claude marketplace packaging | Marketplace installs the same canonical skill; no duplicated runtime instructions | Complete (local checks) |
-| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Complete (tags v0.1.0 and v0.1.1 built verified artifacts; v0.1.1 published) |
+| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Complete (tags v0.1.0-v0.2.0 built verified artifacts; v0.2.0 published) |
 
 Milestone 2 establishes the AST mapping for all MVP node types; milestones 3-9
 add output behavior incrementally. Blockquotes and horizontal rules belong in
@@ -148,6 +148,9 @@ Durable decisions live in this roadmap and the architecture.
   the plugin manifest, the MIT license file, and the `Darren Zhu` marketplace
   owner. The downloaded skill archive converted a table fixture outside any
   checkout with all local checks passing.
-- Outstanding: publishing the draft is an owner action. Standalone OAuth and
-  folder targeting are still not exercised live, and installing from a published
-  release asset is still unexercised.
+- The draft was published as the latest release. Downloading
+  `releases/latest/download/markdown-to-google-docs-skill.zip` returns 200 and
+  the file is byte-identical to both the CI draft asset and the local build, so
+  the documented Codex install URL serves this release's archive.
+- Outstanding: standalone OAuth and folder targeting are still not exercised
+  live, and no agent has been installed from the published asset end to end.

@@ -244,9 +244,10 @@ and Linux, builds wheels/source distributions and both skill ZIPs, and exercises
 the real Mermaid CLI on Windows. Pushing a version-matching `v*` tag creates a
 draft GitHub release after checks pass; publishing the draft is an owner action.
 Hosted CI passes on Windows and Linux, including real Mermaid rendering, and it
-passed on the current main commit. The `v0.1.1` tag workflow built and attached
+passed on the current main commit. The `v0.2.0` tag workflow built and attached
 all four expected artifacts, and that release is published, so the latest-asset
-download URL resolves. Local archive builds remain available as a fallback.
+download URL resolves and serves the current skill archive. Local archive builds
+remain available as a fallback.
 
 Read [architecture](ARCHITECTURE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and
 [AGENTS.md](../AGENTS.md). `CLAUDE.md` is a relative symlink to `AGENTS.md`.
