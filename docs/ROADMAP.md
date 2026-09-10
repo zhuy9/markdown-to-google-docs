@@ -33,8 +33,9 @@ an unguarded full DOCX overwrite. Batch conversion and presets remain deferred.
 Final review checks: 81 offline tests and 3 real Mermaid tests passed on macOS /
 Python 3.14. Wheel/source and both skill archives build; archive contents are
 inspected and the installed wheel is exercised outside the checkout. Live Google
-verification used connected MCP tools, not standalone OAuth. New hosted CI and
-standalone OAuth/folder checks remain outstanding. No new runtime dependency was added.
+verification used connected MCP tools, not standalone OAuth. Hosted CI passed on the
+current main commit; standalone OAuth and folder checks remain outstanding. No new
+runtime dependency was added.
 
 Follow the original order. Only mark a milestone complete after its acceptance
 checks pass; partial implementation is not completion.
@@ -54,7 +55,7 @@ checks pass; partial implementation is not completion.
 | 11 | Validation | Expected/observed element counts expose missing content; blockquotes and rules verified; unsupported HTML reported; code not mistaken for leaked Markdown | Complete (local checks) |
 | 12 | Agent Skill packaging | One vendor-neutral skill invokes the engine, reports degradation, and validates/builds into an installable ZIP | Complete (local checks) |
 | 13 | Claude marketplace packaging | Marketplace installs the same canonical skill; no duplicated runtime instructions | Complete (local checks) |
-| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Complete (tag v0.1.0 built a verified draft) |
+| 14 | GitHub Actions release workflow | Offline checks run in CI; a tag builds tested package/skill artifacts without private data | Complete (tags v0.1.0 and v0.1.1 built verified artifacts; v0.1.1 published) |
 
 Milestone 2 establishes the AST mapping for all MVP node types; milestones 3-9
 add output behavior incrementally. Blockquotes and horizontal rules belong in
@@ -124,5 +125,21 @@ Durable decisions live in this roadmap and the architecture.
   artifacts: wheel, source distribution, skill ZIP, and Claude plugin ZIP.
 - Downloaded draft assets confirmed the embedded license and marketplace owner
   both read `Darren Zhu`, so owner metadata propagates into published archives.
-- The release stays a draft pending manual publish, so public release and
-  install-from-release-asset paths are still unexercised.
+- Tag `v0.1.1` repeated the same workflow success and its draft was published, so
+  the public release and the `releases/latest/download` skill-archive URL both
+  resolve. Installing from that published asset is still unexercised.
+
+## Release 0.2.0 preparation (2026-09-10)
+
+- Bumped `pyproject.toml` and `.claude-plugin/plugin.json` together to `0.2.0`,
+  since packaging tests assert the manifests match the installed version.
+- 81 offline tests and 3 real Mermaid CLI tests passed on macOS / Python 3.14.
+- Wheel, source distribution, skill ZIP, and Claude plugin ZIP all built at
+  `0.2.0`. A clean venv installed the wheel outside the checkout and converted a
+  sample file with every local check passing.
+- Reconciled stale release evidence: hosted CI passes on the current main commit,
+  `v0.1.1` is published with all four assets, and the
+  `releases/latest/download` skill-archive URL returns 200.
+- Outstanding before tagging: push these commits, confirm the hosted checks run,
+  then push `v0.2.0`. Standalone OAuth and folder targeting are still not
+  exercised live, and installing from a published asset is still unexercised.

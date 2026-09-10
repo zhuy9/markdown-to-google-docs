@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 - 2026-09-10
 
 - Preserve overflow tables and footnote-like definitions; warn on unsupported syntax.
 - Validate ordered blocks, inline formatting, heading/list structure, and code boundaries.
@@ -9,6 +9,8 @@
 - Add a real Google-exported demo, compatibility matrix, and OAuth/recovery docs.
 - Add explicit revision-protected text/code updates, persisted identity, and creation folder targeting.
 - Apply native paragraph styles before inline styles and preserve hard line breaks.
+- Document Claude Code plugin and Codex skill installation.
+- Reconcile release evidence with the published `v0.1.1` release and hosted CI.
 
 ## 0.1.1 - 2026-09-09
 

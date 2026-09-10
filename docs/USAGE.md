@@ -225,8 +225,8 @@ For Claude Code, extract the Claude plugin ZIP and run:
 
 Install the extracted skill's `scripts/requirements.txt` with the Python you use
 for conversion. A source checkout can also be added as a local marketplace after
-`python -m pip install .`. Once hosted, the GitHub repository can be used as the
-marketplace source. See [Claude marketplaces](https://code.claude.com/docs/en/plugin-marketplaces).
+`python -m pip install .`. The hosted GitHub repository works as the marketplace
+source directly: `/plugin marketplace add zhuy9/markdown-to-google-docs`. See [Claude marketplaces](https://code.claude.com/docs/en/plugin-marketplaces).
 
 ## Development and releases
 
@@ -243,11 +243,10 @@ Tests use synthetic documents; live Google checks are separate. CI tests Windows
 and Linux, builds wheels/source distributions and both skill ZIPs, and exercises
 the real Mermaid CLI on Windows. Pushing a version-matching `v*` tag creates a
 draft GitHub release after checks pass; publishing the draft is an owner action.
-Hosted CI passed on Windows and Linux, including real Mermaid rendering.
-The `v0.1.0` tag workflow built and attached the expected artifacts to a verified
-draft. That evidence does not establish a public release or that the latest-asset
-download URL is available; if unavailable, build the archives locally. The current
-review patches have local checks and require a new hosted run after pushing.
+Hosted CI passes on Windows and Linux, including real Mermaid rendering, and it
+passed on the current main commit. The `v0.1.1` tag workflow built and attached
+all four expected artifacts, and that release is published, so the latest-asset
+download URL resolves. Local archive builds remain available as a fallback.
 
 Read [architecture](ARCHITECTURE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and
 [AGENTS.md](../AGENTS.md). `CLAUDE.md` is a relative symlink to `AGENTS.md`.

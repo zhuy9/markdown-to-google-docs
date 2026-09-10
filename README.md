@@ -158,7 +158,7 @@ the archives yourself with `python tools/build_skill.py`.
 ## Contributing
 
 See [contributing](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), and
-[roadmap](docs/ROADMAP.md). The original release passed hosted CI; review patches
-have local test evidence. New hosted runs are needed after these commits are pushed.
+[roadmap](docs/ROADMAP.md). Hosted CI passes on the current main commit, and
+`v0.1.1` is published with all four release assets.
 
 [MIT license](LICENSE).
